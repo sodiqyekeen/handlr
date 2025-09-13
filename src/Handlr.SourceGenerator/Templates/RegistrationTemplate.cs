@@ -41,6 +41,7 @@ public static class RegistrationTemplate
         sb.AppendLine("using Handlr.Abstractions.Commands;");
         sb.AppendLine("using Handlr.Abstractions.Queries;");
         sb.AppendLine("using Handlr.Abstractions.Results;");
+        sb.AppendLine("using Handlr.Abstractions.Common;");
 
         // Add using statements for all command and query namespaces
         var namespaces = new HashSet<string>();
@@ -57,7 +58,6 @@ public static class RegistrationTemplate
             sb.AppendLine($"using {ns};");
         }
         sb.AppendLine("using Handlr.Abstractions.Pipelines;");
-        sb.AppendLine("using Handlr.Abstractions.Common;");
         sb.AppendLine("using Handlr.Generated;");
         sb.AppendLine();
 
@@ -87,6 +87,7 @@ public static class RegistrationTemplate
         sb.AppendLine("        configureOptions?.Invoke(options);");
         sb.AppendLine();
         sb.AppendLine("        // Register core services");
+        sb.AppendLine("        services.AddScoped<IHandlrDispatcher, HandlrDispatcher>();");
         sb.AppendLine("        RegisterHandlers(services);");
         // sb.AppendLine("        RegisterPipelineBehaviors(services);");
         sb.AppendLine();
@@ -140,20 +141,7 @@ public static class RegistrationTemplate
         sb.AppendLine("    }");
         sb.AppendLine();
 
-        /*
-        // Pipeline behavior registration method
-        sb.AppendLine("    private static void RegisterPipelineBehaviors(IServiceCollection services)");
-        sb.AppendLine("    {");
-
-        foreach (var behavior in behaviors)
-        {
-            sb.AppendLine($"        services.AddScoped(typeof(IPipelineBehavior<,>), typeof({behavior.Name}));");
-        }
-
-        sb.AppendLine("    }");
-        sb.AppendLine();
-        */
-
+       
         // Add individual registration methods for flexibility
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Adds command handlers to the service collection.");
@@ -167,18 +155,6 @@ public static class RegistrationTemplate
         sb.AppendLine("    }");
         sb.AppendLine();
 
-        /*
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Adds pipeline behaviors to the service collection.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    /// <param name=\"services\">The service collection</param>");
-        sb.AppendLine("    /// <returns>The service collection for chaining</returns>");
-        sb.AppendLine("    public static IServiceCollection AddHandlrPipelineBehaviors(this IServiceCollection services)");
-        sb.AppendLine("    {");
-        sb.AppendLine("        RegisterPipelineBehaviors(services);");
-        sb.AppendLine("        return services;");
-        sb.AppendLine("    }");
-        */
 
         sb.AppendLine("}");
         sb.AppendLine();

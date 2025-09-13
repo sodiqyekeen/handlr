@@ -8,21 +8,39 @@
 
 <div align="center">
 
-[![NuGet](https://img.shields.io/nuget/v/Handlr.svg)](https://www.nuget.org/packages/Handlr.Abstractions/)
-[![NuGet](https://img.shields.io/nuget/v/Handlr.svg)](https://www.nuget.org/packages/Handlr.SourceGenerator/)
-[![CI](https://github.com/sodiqyekeen/handlr/workflows/CI/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/ci.yml)
+[![NuGet - Handlr.Abstractions](https://img.shields.io/nuget/v/Handlr.Abstractions.svg?label=Handlr.Abstractions)](https://www.nuget.org/packages/Handlr.Abstractions/)
+[![NuGet - Handlr.SourceGenerator](https://img.shields.io/nuget/v/Handlr.SourceGenerator.svg?label=Handlr.SourceGenerator)](https://www.nuget.org/packages/Handlr.SourceGenerator/)
+[![Continuous Integration](https://github.com/sodiqyekeen/handlr/workflows/Continuous%20Integration/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/ci.yml)
 [![Release](https://github.com/sodiqyekeen/handlr/workflows/Release/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/release.yml)
-[![Security](https://github.com/sodiqyekeen/handlr/workflows/Security/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
-[![Docs](https://github.com/sodiqyekeen/handlr/workflows/Documentation/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/docs.yml)
+[![Security Scan](https://github.com/sodiqyekeen/handlr/workflows/Security%20Scan/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
+[![Documentation](https://github.com/sodiqyekeen/handlr/workflows/Documentation/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/docs.yml)
 
 </div>
 
-A comprehensive CQRS (Command Query Responsibility Segregation) framework for .NET with automatic code generation and pipeline behavior support.
+A lightweight CQRS (Command Query Responsibility Segregation) framework for .NET that provides the infrastructure for building scalable applications with automatic code generation and extensible pipeline behavior support.
+
+## 📦 What's Included
+
+### Core Package (`Handlr.Abstractions`)
+- 🎯 **CQRS Interfaces**: `ICommand<T>`, `IQuery<T>`, `ICommandHandler<T>`, `IQueryHandler<T>`
+- 🔄 **Pipeline Infrastructure**: `IPipelineBehavior<TRequest, TResponse>` for cross-cutting concerns
+- 📋 **Result Pattern Support**: Flexible return types including `Result<T>` patterns
+- 🏷️ **Marker Interfaces**: For opt-in behavior patterns (e.g., `IValidatable`, `ICacheable`)
+
+### Source Generator (`Handlr.SourceGenerator`)
+- 🤖 **Automatic Registration**: Discovers and registers all handlers
+- 🔧 **Boilerplate Generation**: Eliminates manual configuration
+- ⚡ **Compile-time Safety**: Type-safe handler discovery
+
+### Samples & Examples
+- 📚 **Implementation Patterns**: Real-world examples of pipeline behaviors
+- 🎨 **Best Practices**: Recommended approaches for common scenarios
+- 🚀 **Getting Started Templates**: Ready-to-use patterns for your application
 
 ## 🚀 Features
 
 - **Source Generator Powered**: Automatic discovery and registration of commands, queries, and handlers
-- **Pipeline Behaviors**: Comprehensive cross-cutting concerns (validation, logging, caching, authorization, retry, metrics)
+- **Pipeline Behavior Support**: Infrastructure and examples for implementing cross-cutting concerns
 - **Type-Safe**: Strong typing with compile-time validation
 - **Flexible Results**: Support for any return type including `Result<T>` pattern
 - **Dependency Injection Ready**: Built for modern .NET DI containers
@@ -75,23 +93,25 @@ public partial class CreateUserCommandHandler
 services.AddHandlr();
 
 // Send commands and queries
-var result = await mediator.Send(new CreateUserCommand { Name = "John", Email = "john@example.com" });
+var result = await handler.Send(new CreateUserCommand { Name = "John", Email = "john@example.com" });
 ```
 
-## 🎯 Pipeline Behaviors
+## 🎯 Pipeline Behavior Examples
 
-The framework provides comprehensive examples for implementing cross-cutting concerns:
+The framework provides the infrastructure for pipeline behaviors and includes comprehensive examples to help you implement cross-cutting concerns:
 
-### Available Behavior Examples
+### Example Behavior Patterns
 
-| Behavior | Purpose | Interface | Example Usage |
-|----------|---------|-----------|---------------|
+| Example Pattern | Purpose | Marker Interface | Sample Implementation |
+|----------------|---------|------------------|----------------------|
 | **Validation** | Request validation | `IValidatable` | Input validation with detailed error reporting |
 | **Logging** | Request/response logging | *All requests* | Correlation IDs, performance tracking |
 | **Caching** | Query result caching | `ICacheable` | Configurable cache duration and keys |
 | **Authorization** | Permission checking | `IRequireAuthorization` | Role/permission-based access control |
 | **Retry** | Transient failure handling | `IRetryable` | Exponential backoff, smart retry logic |
 | **Metrics** | Performance monitoring | `IMetricsEnabled` | Custom tags, success/failure tracking |
+
+> **Note**: These are example patterns provided in the samples folder. You need to implement the actual behavior classes according to your application's needs.
 
 ### Example: Command with Multiple Behaviors
 ```csharp
@@ -128,14 +148,84 @@ public record CreateOrderCommand : ICommand<Result<Order>>, IValidatable, IRequi
 }
 ```
 
-### Behavior Registration
+## 🔧 Pipeline Behavior Registration
+
+Handlr provides flexible pipeline behavior registration using standard .NET DI patterns. You can choose between **global** and **selective** registration approaches:
+
+### 🌍 Global Registration (Recommended)
+
+Apply behaviors to **all** commands and queries automatically:
+
 ```csharp
-// Register behaviors in desired execution order
+// ✅ Global registration - applies to ALL commands and queries
+services.AddHandlr();
+
+// Register behaviors globally using generic type registration
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviorExample<,>));
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviorExample<,>));
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehaviorExample<,>));
+
+// Execution order follows registration order:
+// 1. LoggingBehavior → 2. ValidationBehavior → 3. MetricsBehavior → 4. Handler
+```
+
+**Benefits:**
+- ✅ **Single registration** per behavior type
+- ✅ **Automatic coverage** for all commands/queries  
+- ✅ **Easy maintenance** - add new commands without extra registration
+- ✅ **Standard .NET DI** - familiar pattern for all developers
+
+### 🎯 Selective Registration
+
+Apply behaviors only to **specific** command/query combinations:
+
+```csharp
+// ✅ Selective registration - fine-grained control
+services.AddHandlr();
+
+// Register for specific command-response combinations
 services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, AuthorizationBehaviorExample<CreateOrderCommand, Result<Order>>>();
 services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, ValidationBehaviorExample<CreateOrderCommand, Result<Order>>>();
-services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, LoggingBehaviorExample<CreateOrderCommand, Result<Order>>>();
-services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, MetricsBehaviorExample<CreateOrderCommand, Result<Order>>>();
+
+// Different behaviors for different commands
+services.AddScoped<IPipelineBehavior<GetUserQuery, Result<User>>, CachingBehaviorExample<GetUserQuery, Result<User>>>();
+services.AddScoped<IPipelineBehavior<GetUserQuery, Result<User>>, LoggingBehaviorExample<GetUserQuery, Result<User>>>();
 ```
+
+**Benefits:**
+- ✅ **Precise control** over which behaviors apply where
+- ✅ **Performance optimization** - only run necessary behaviors
+- ✅ **Different behavior chains** for different command types
+
+### 🎭 Mixed Registration
+
+Combine both approaches for maximum flexibility:
+
+```csharp
+services.AddHandlr();
+
+// Global behaviors for cross-cutting concerns
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviorExample<,>));
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehaviorExample<,>));
+
+// Selective behaviors for specific needs
+services.AddScoped<IPipelineBehavior<SecurityCommand, Result>, AuthorizationBehaviorExample<SecurityCommand, Result>>();
+services.AddScoped<IPipelineBehavior<CachedQuery, Result<Data>>, CachingBehaviorExample<CachedQuery, Result<Data>>>();
+```
+
+### 🔄 Execution Order
+
+Behaviors execute in **registration order**:
+
+```csharp
+// Execution order: Auth → Validation → Logging → Metrics → Handler
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehaviorExample<,>));  // 1st
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviorExample<,>));     // 2nd
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviorExample<,>));        // 3rd
+services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehaviorExample<,>));        // 4th
+```
+
+> **💡 Best Practice**: Register cross-cutting concerns (logging, metrics) globally, and specific behaviors (authorization, caching) selectively.
 
 ## 📚 Documentation
 
@@ -171,13 +261,17 @@ services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, Metrics
 3. **Understand Patterns**: Review the [Pipeline Behaviors Guide](./README-BEHAVIORS.md)
 4. **Build Your App**: Apply the patterns to your specific use cases
 
-## 🔧 Advanced Features
+## 🔧 What You Can Build
+
+With Handlr's pipeline behavior infrastructure, you can implement:
 
 - **Conditional Behaviors**: Apply behaviors based on environment or configuration
-- **Behavior Composition**: Combine multiple concerns in single behaviors
+- **Behavior Composition**: Combine multiple concerns in single behaviors  
 - **Dynamic Selection**: Choose behaviors based on request properties
-- **Performance Monitoring**: Built-in metrics and performance tracking
+- **Performance Monitoring**: Custom metrics and performance tracking
 - **Error Handling**: Comprehensive exception handling patterns
+
+> **Note**: These are capabilities you can implement using the provided infrastructure and example patterns.
 
 ## 📖 Learn More
 

@@ -1,0 +1,100 @@
+### Handlr Sample WebAPI - Test Endpoints
+
+# Health check
+GET http://localhost:5244/api/health
+
+###
+
+# Create a new user
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "age": 30
+}
+
+###
+
+# Create another user
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "name": "Jane Smith", 
+  "email": "jane.smith@example.com",
+  "age": 25
+}
+
+###
+
+# Get user by ID
+GET http://localhost:5244/api/users/1234
+
+###
+
+# Get users with filtering
+GET http://localhost:5244/api/users?nameFilter=User&minAge=20&page=1&pageSize=5
+
+###
+
+# Get users without filters (pagination only)
+GET http://localhost:5244/api/users?page=1&pageSize=10
+
+###
+
+# Update user status
+PUT http://localhost:5244/api/users/1234/status
+Content-Type: application/json
+
+{
+  "status": "Inactive"
+}
+
+###
+
+# Generate summary report
+POST http://localhost:5244/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "reportType": "summary"
+}
+
+###
+
+# Generate detailed report
+POST http://localhost:5244/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-06-01",
+  "endDate": "2024-06-30", 
+  "reportType": "detailed"
+}
+
+###
+
+# Test validation - invalid user (missing name)
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "age": 25
+}
+
+###
+
+# Test validation - invalid date range
+POST http://localhost:5244/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-12-31",
+  "endDate": "2024-01-01",
+  "reportType": "summary"
+}
