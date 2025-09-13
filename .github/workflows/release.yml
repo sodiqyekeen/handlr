@@ -176,6 +176,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-pack, create-release]
     environment: production
+    permissions:
+      contents: read
+      packages: write
     
     steps:
     - name: Download packages
@@ -197,8 +200,14 @@ jobs:
           --skip-duplicate
 
     - name: Publish to GitHub Packages
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Configure GitHub Packages source
+        dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        
+        # Push packages to GitHub Packages
         dotnet nuget push ./packages/*.nupkg \
-          --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
+          --source github \
           --api-key ${{ secrets.GITHUB_TOKEN }} \
           --skip-duplicate
