@@ -1,0 +1,166 @@
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '**.md'
+      - 'src/**/*.cs'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - '**.md'
+      - 'src/**/*.cs'
+
+jobs:
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install DocFX
+      run: |
+        dotnet tool install --global docfx
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build projects for documentation
+      run: dotnet build --configuration Release
+
+    - name: Generate API documentation
+      run: |
+        # Create basic docfx.json if it doesn't exist
+        if [ ! -f "docfx.json" ]; then
+          cat > docfx.json << EOF
+        {
+          "metadata": [
+            {
+              "src": [
+                {
+                  "files": ["src/**/*.csproj"],
+                  "exclude": ["**/bin/**", "**/obj/**"]
+                }
+              ],
+              "dest": "api",
+              "disableGitFeatures": false,
+              "disableDefaultFilter": false
+            }
+          ],
+          "build": {
+            "content": [
+              {
+                "files": ["api/**.yml", "api/index.md"]
+              },
+              {
+                "files": ["docs/**.md", "*.md"]
+              }
+            ],
+            "resource": [
+              {
+                "files": ["images/**"]
+              }
+            ],
+            "dest": "_site",
+            "globalMetadataFiles": [],
+            "fileMetadataFiles": [],
+            "template": ["default"],
+            "postProcessors": [],
+            "markdownEngineName": "markdig",
+            "noLangKeyword": false,
+            "keepFileLink": false,
+            "cleanupCacheHistory": false,
+            "disableGitFeatures": false
+          }
+        }
+        EOF
+        fi
+
+    - name: Build documentation
+      run: |
+        docfx metadata docfx.json
+        docfx build docfx.json
+
+    - name: Upload documentation artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: _site/
+        retention-days: 30
+
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: build-docs
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Download documentation
+      uses: actions/download-artifact@v4
+      with:
+        name: documentation
+        path: ./_site
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./_site
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+  validate-links:
+    name: Validate Documentation Links
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check markdown links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
+        config-file: '.github/markdown-link-check-config.json'
+
+    - name: Create link check config if missing
+      run: |
+        if [ ! -f ".github/markdown-link-check-config.json" ]; then
+          mkdir -p .github
+          cat > .github/markdown-link-check-config.json << EOF
+        {
+          "ignorePatterns": [
+            {
+              "pattern": "^http://localhost"
+            }
+          ],
+          "timeout": "20s",
+          "retryOn429": true,
+          "retryCount": 3,
+          "fallbackRetryDelay": "30s",
+          "aliveStatusCodes": [200, 206]
+        }
+        EOF
+        fi

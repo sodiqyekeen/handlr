@@ -358,3 +358,18 @@ FodyWeavers.xsd
 
 # Python scripts for development
 name_checker.py
+
+# CI/CD outputs
+packages/
+_site/
+coverage/
+api/
+
+# Documentation
+*.nupkg
+*.snupkg
+
+# Security scan outputs
+vulnerability-report.txt
+deprecated-report.txt
+security-report.txt

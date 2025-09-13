@@ -1,0 +1,27 @@
+using System.Threading;
+using System.Threading.Tasks;
+using Handlr.Abstractions.Results;
+using SampleConsoleApp.Commands;
+
+namespace SampleConsoleApp.Commands;
+
+/// <summary>
+/// User implementation of GenerateReportCommand handler
+/// </summary>
+public partial class GenerateReportCommandHandler
+{
+    /// <summary>
+    /// Handles the GenerateReportCommand
+    /// </summary>
+    public partial async Task<Result<string>> HandleAsync(GenerateReportCommand command, CancellationToken cancellationToken)
+    {
+        // Simulate report generation
+        await Task.Delay(500, cancellationToken);
+
+        var reportContent = $"Report Type: {command.ReportType}\n" +
+                           $"Period: {command.StartDate:yyyy-MM-dd} to {command.EndDate:yyyy-MM-dd}\n" +
+                           $"Generated at: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+
+        return Result<string>.Success(reportContent);
+    }
+}

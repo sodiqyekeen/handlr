@@ -1,0 +1,99 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM UTC
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Check for vulnerable packages
+      run: |
+        echo "Checking for vulnerable NuGet packages..."
+        dotnet list package --vulnerable --include-transitive > vulnerability-report.txt
+        
+        if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
+          echo "🚨 Vulnerable packages found!"
+          cat vulnerability-report.txt
+          exit 1
+        else
+          echo "✅ No vulnerable packages found"
+        fi
+
+    - name: Check for deprecated packages
+      run: |
+        echo "Checking for deprecated NuGet packages..."
+        dotnet list package --deprecated > deprecated-report.txt
+        
+        if grep -q "The following sources were used" deprecated-report.txt; then
+          echo "⚠️  Deprecated packages found:"
+          cat deprecated-report.txt
+        else
+          echo "✅ No deprecated packages found"
+        fi
+
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: csharp
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Build
+      run: |
+        dotnet restore
+        dotnet build --configuration Release
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  secrets-scan:
+    name: Secrets Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
