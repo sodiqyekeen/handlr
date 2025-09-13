@@ -1,0 +1,279 @@
+/* Custom styles for Handlr CQRS Framework Documentation */
+
+/* ===== GLOBAL TYPOGRAPHY IMPROVEMENTS ===== */
+
+/* Base font size improvements */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    color: #333 !important;
+}
+
+/* Content area typography */
+.content,
+article,
+.article {
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+}
+
+/* List items */
+li {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Paragraphs */
+p {
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+    margin-bottom: 1.25rem !important;
+}
+
+/* Table cells with larger font size */
+table td,
+table th {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+/* Code blocks with readable font size */
+code {
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+}
+
+/* Inline code specific styling */
+p code,
+li code,
+td code {
+    font-size: 14px !important;
+    padding: 0.25rem 0.5rem !important;
+    background: #f1f5f9 !important;
+    color: #3b82f6 !important;
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+}
+
+/* Pre-formatted code blocks */
+pre code {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #e2e8f0 !important;
+}
+
+/* ===== NAVBAR AND LOGO FIXES ===== */
+
+/* Fix navbar logo display */
+.navbar-brand #logo {
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    margin-right: 8px;
+    vertical-align: middle;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Ensure SVG logo renders properly */
+.navbar-brand img.svg {
+    width: 32px;
+    height: 32px;
+    fill: currentColor;
+}
+
+/* Improve navbar brand text */
+.navbar-brand {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    color: #fff !important;
+    padding: 12px 15px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* ===== CONTENT IMPROVEMENTS ===== */
+
+/* Center logo and improve spacing */
+.article h1+div[align="center"] {
+    margin: 2rem 0;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.article h1+div[align="center"] img {
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.article h1+div[align="center"] img:hover {
+    transform: scale(1.05);
+}
+
+/* Improve main heading */
+.article h1 {
+    color: #1e293b;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Style section headings */
+.article h2 {
+    color: #1e293b;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+/* ===== FEATURE LIST STYLING ===== */
+
+/* Style feature list items */
+.article ul li {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.article ul li strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* ===== TABLE IMPROVEMENTS ===== */
+
+/* Improve table styling */
+.article table {
+    margin: 2rem 0;
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.article table th {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-weight: 600;
+    font-size: 15px !important;
+    padding: 1rem;
+    text-align: left;
+}
+
+.article table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+.article table tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.article table tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* ===== CODE BLOCK IMPROVEMENTS ===== */
+
+/* Style code blocks */
+.article pre {
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: #1e293b !important;
+    border: 1px solid #334155;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.article code {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    color: #e2e8f0;
+}
+
+/* Inline code styling */
+.article p code,
+.article li code {
+    background: #f1f5f9 !important;
+    color: #3b82f6 !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+/* ===== LINK IMPROVEMENTS ===== */
+
+/* Improve link styling */
+.article a {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid transparent;
+}
+
+.article a:hover {
+    color: #1d4ed8;
+    border-bottom-color: #1d4ed8;
+    text-decoration: none;
+}
+
+/* ===== LAYOUT IMPROVEMENTS ===== */
+
+/* Improve main content readability */
+.article {
+    max-width: 900px;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+
+/* Add some breathing room to paragraphs */
+.article p {
+    margin-bottom: 1.25rem;
+    color: #475569;
+}
+
+/* Style strong text */
+.article strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+/* ===== RESPONSIVE IMPROVEMENTS ===== */
+
+@media (max-width: 768px) {
+    .article h1 {
+        font-size: 2rem;
+    }
+
+    .article h2 {
+        font-size: 1.5rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem !important;
+    }
+
+    .article h1+div[align="center"] {
+        padding: 1rem;
+    }
+}

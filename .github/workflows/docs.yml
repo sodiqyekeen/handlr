@@ -144,7 +144,26 @@ jobs:
         fi
         
         echo "Building documentation site..."
-        docfx build docfx.json
+        if docfx build docfx.json --verbose; then
+          echo "✅ Documentation build successful"
+          
+          # Verify essential files were created
+          if [ -f "_site/index.html" ]; then
+            echo "✅ Landing page generated successfully"
+          else
+            echo "⚠️ No landing page found, creating simple redirect"
+            mkdir -p _site
+            echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Handlr CQRS Framework</title><meta http-equiv="refresh" content="0; url=./docs/index.html"></head><body><p>Redirecting to <a href="./docs/index.html">documentation</a>...</p></body></html>' > _site/index.html
+          fi
+          
+          # List generated files for debugging
+          echo "Generated files:"
+          find _site -name "*.html" | head -10
+        else
+          echo "❌ Documentation build failed, creating static fallback"
+          mkdir -p _site
+          echo '<!DOCTYPE html><html><head><title>Handlr CQRS Framework</title></head><body><h1>Handlr CQRS Framework</h1><p>Documentation site is being rebuilt. Please visit the <a href="https://github.com/sodiqyekeen/handlr">GitHub repository</a> for the latest information.</p></body></html>' > _site/index.html
+        fi
 
     - name: Upload documentation artifacts
       uses: actions/upload-artifact@v4

@@ -41,13 +41,21 @@
                     "**/bin/**",
                     "_site/**"
                 ]
+            },
+            {
+                "files": [
+                    "toc.yml",
+                    "docs/toc.yml"
+                ]
             }
         ],
         "resource": [
             {
                 "files": [
                     "docs/images/**",
-                    "images/**"
+                    "images/**",
+                    "assets/**",
+                    "styles/**"
                 ],
                 "exclude": [
                     "**/obj/**",
@@ -72,8 +80,7 @@
         "globalMetadataFiles": [],
         "fileMetadataFiles": [],
         "template": [
-            "default",
-            "modern"
+            "default"
         ],
         "postProcessors": [
             "ExtractSearchIndex"
@@ -85,8 +92,9 @@
         "disableGitFeatures": false,
         "globalMetadata": {
             "_appTitle": "Handlr CQRS Framework",
-            "_appName": "Handlr",
-            "_appLogoPath": "images/logo.png",
+            "_appName": "Handlr CQRS Framework",
+            "_appFaviconPath": "assets/logos/handlr-favicon.svg",
+            "_appLogoPath": "assets/logos/handlr-icon.svg",
             "_enableSearch": true,
             "_gitContribute": {
                 "repo": "https://github.com/sodiqyekeen/handlr",
