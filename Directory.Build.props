@@ -1,0 +1,38 @@
+<Project>
+    <PropertyGroup>
+        <!-- Central Package Management -->
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+        <!-- Package Metadata -->
+        <VersionPrefix>1.0.0</VersionPrefix>
+        <Authors>Sodiq Yekeen</Authors>
+        <Description>A powerful source generator for CQRS pattern implementation that generates
+            handlers, validators, and boilerplate code automatically.</Description>
+        <PackageId>Handlr</PackageId>
+        <PackageTags>CQRS;Source Generator;Handler;Command;Query;Validation;MediatR</PackageTags>
+        <PackageProjectUrl>https://github.com/sodiqyekeen/handlr</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/sodiqyekeen/handlr</RepositoryUrl>
+        <PackageLicense>MIT</PackageLicense>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReleaseNotes>Initial release of Handlr - CQRS Source Generator</PackageReleaseNotes>
+        <Copyright>Copyright © Sodiq Yekeen</Copyright>
+
+        <!-- Build properties -->
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <WarningsAsErrors />
+        <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- Source Link -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(IsPackable)' == 'true'">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    </ItemGroup>
+</Project>
