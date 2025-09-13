@@ -8,7 +8,8 @@
 
 <div align="center">
 
-[![NuGet](https://img.shields.io/nuget/v/Handlr.svg)](https://www.nuget.org/packages/Handlr/)
+[![NuGet](https://img.shields.io/nuget/v/Handlr.svg)](https://www.nuget.org/packages/Handlr.Abstractions/)
+[![NuGet](https://img.shields.io/nuget/v/Handlr.svg)](https://www.nuget.org/packages/Handlr.SourceGenerator/)
 [![CI](https://github.com/sodiqyekeen/handlr/workflows/CI/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/ci.yml)
 [![Release](https://github.com/sodiqyekeen/handlr/workflows/Release/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/release.yml)
 [![Security](https://github.com/sodiqyekeen/handlr/workflows/Security/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
