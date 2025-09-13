@@ -20,13 +20,13 @@ The pipeline consists of four main workflows:
 - Pull requests to `main` or `develop` branches
 
 **Jobs:**
-- **Test**: Runs tests on .NET 8.0 and 9.0, uploads code coverage
+- **Test**: Runs tests on .NET 9.0, uploads code coverage
 - **Build Samples**: Validates sample applications work correctly
 - **Code Quality**: Checks code formatting and runs security scans
 - **Package**: Creates NuGet packages for main branch builds
 
 **Features:**
-- Multi-target framework testing
+- .NET 9.0 target framework testing
 - Code coverage reporting with Codecov
 - NuGet package caching for faster builds
 - Security vulnerability scanning
@@ -119,8 +119,26 @@ Create a `production` environment in your repository settings with:
 ### GitHub Pages
 
 Enable GitHub Pages in repository settings:
-- Source: GitHub Actions
-- Branch: Automatically managed by workflow
+
+1. **Go to Repository Settings**:
+   - Navigate to your repository → **Settings** tab
+   - Scroll down to **"Pages"** in the left sidebar
+
+2. **Configure Source**:
+   - Under **"Source"**, select **"GitHub Actions"**
+   - Save the settings
+
+3. **Verify Permissions** (usually automatic):
+   - The workflow has `pages: write` and `id-token: write` permissions
+   - GitHub automatically creates the `github-pages` environment
+
+4. **Access Documentation**:
+   - After first successful deployment, docs will be available at:
+   - `https://YOUR_USERNAME.github.io/handlr/`
+
+5. **Optional Environment Protection**:
+   - Go to **Settings** → **Environments**
+   - Configure `github-pages` environment with protection rules if desired
 
 ## Usage Examples
 
@@ -170,9 +188,11 @@ Add these badges to your README:
    - Verify package name doesn't conflict
 
 2. **Documentation Build Failures**:
-   - Check DocFX configuration
+   - Check DocFX configuration in `docfx.json`
    - Ensure all referenced projects build successfully
    - Verify markdown syntax is correct
+   - Check that `docs/` directory exists with content
+   - Ensure API documentation generation succeeds
 
 3. **Security Scan Failures**:
    - Update vulnerable packages identified

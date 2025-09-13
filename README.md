@@ -130,7 +130,6 @@ services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, Metrics
 
 - **[Pipeline Behaviors Guide](./README-BEHAVIORS.md)** - Comprehensive behavior implementation guide
 - **[Behavior Examples](./samples/SampleConsoleApp/Examples/README.md)** - Complete examples with explanations
-- **[Source Generator Guide](./CQRS-SourceGenerator-Development-Guide.md)** - Source generator development details
 
 ## 🏗️ Project Structure
 
@@ -174,7 +173,6 @@ services.AddScoped<IPipelineBehavior<CreateOrderCommand, Result<Order>>, Metrics
 - Run `dotnet run` in `samples/SampleConsoleApp` to see the framework in action
 - Explore behavior examples in `samples/SampleConsoleApp/Examples/`
 - Read the comprehensive [behaviors documentation](./README-BEHAVIORS.md)
-- Check the [source generator guide](./CQRS-SourceGenerator-Development-Guide.md) for extending the framework
 
 ## Samples
 
@@ -190,7 +188,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 This project uses a comprehensive CI/CD pipeline with:
 
-- **Continuous Integration**: Automated testing on .NET 8.0 and 9.0
+- **Continuous Integration**: Automated testing on .NET 9.0
 - **Automated Releases**: Semantic versioning with auto-generated changelogs
 - **Security Scanning**: Vulnerability detection and secret scanning
 - **Documentation**: Auto-generated API docs deployed to GitHub Pages

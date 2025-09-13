@@ -1,0 +1,25 @@
+# Table of Contents
+
+This file provides navigation for the Handlr documentation.
+
+## [Home](index.md)
+
+## Getting Started
+- [Installation](getting-started/installation.md)
+- [Quick Start](getting-started/quick-start.md)
+
+## Core Concepts  
+- [CQRS Fundamentals](fundamentals/cqrs.md)
+- [Source Generator](fundamentals/source-generator.md)
+
+## Pipeline Behaviors
+- [Overview](behaviors/overview.md)
+- [Examples](behaviors/examples.md)
+
+## API Reference
+- [Abstractions](~/api/Handlr.Abstractions.yml)
+- [Source Generator](~/api/Handlr.SourceGenerator.yml)
+
+## Examples
+- [Console App](examples/console.md)
+- [Web API](examples/webapi.md)

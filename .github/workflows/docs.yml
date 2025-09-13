@@ -40,8 +40,11 @@ jobs:
 
     - name: Generate API documentation
       run: |
-        # Create basic docfx.json if it doesn't exist
-        if [ ! -f "docfx.json" ]; then
+        # Use existing docfx.json configuration
+        if [ -f "docfx.json" ]; then
+          echo "Using existing docfx.json configuration"
+        else
+          echo "Creating basic docfx.json configuration"
           cat > docfx.json << EOF
         {
           "metadata": [

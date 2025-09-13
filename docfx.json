@@ -1,0 +1,97 @@
+{
+    "metadata": [
+        {
+            "src": [
+                {
+                    "files": [
+                        "src/**/*.csproj"
+                    ],
+                    "exclude": [
+                        "**/bin/**",
+                        "**/obj/**",
+                        "**/packages/**"
+                    ]
+                }
+            ],
+            "dest": "api",
+            "disableGitFeatures": false,
+            "disableDefaultFilter": false,
+            "properties": {
+                "TargetFramework": "net9.0"
+            },
+            "filter": "filterConfig.yml"
+        }
+    ],
+    "build": {
+        "content": [
+            {
+                "files": [
+                    "api/**.yml",
+                    "api/index.md"
+                ]
+            },
+            {
+                "files": [
+                    "docs/**.md",
+                    "*.md"
+                ],
+                "exclude": [
+                    "**/obj/**",
+                    "**/bin/**",
+                    "_site/**"
+                ]
+            }
+        ],
+        "resource": [
+            {
+                "files": [
+                    "docs/images/**",
+                    "images/**"
+                ],
+                "exclude": [
+                    "**/obj/**",
+                    "**/bin/**",
+                    "_site/**"
+                ]
+            }
+        ],
+        "overwrite": [
+            {
+                "files": [
+                    "docs/overwrite/**/*.md"
+                ],
+                "exclude": [
+                    "**/obj/**",
+                    "**/bin/**",
+                    "_site/**"
+                ]
+            }
+        ],
+        "dest": "_site",
+        "globalMetadataFiles": [],
+        "fileMetadataFiles": [],
+        "template": [
+            "default",
+            "modern"
+        ],
+        "postProcessors": [
+            "ExtractSearchIndex"
+        ],
+        "markdownEngineName": "markdig",
+        "noLangKeyword": false,
+        "keepFileLink": false,
+        "cleanupCacheHistory": false,
+        "disableGitFeatures": false,
+        "globalMetadata": {
+            "_appTitle": "Handlr CQRS Framework",
+            "_appName": "Handlr",
+            "_appLogoPath": "images/logo.png",
+            "_enableSearch": true,
+            "_gitContribute": {
+                "repo": "https://github.com/sodiqyekeen/handlr",
+                "branch": "main"
+            },
+            "_gitUrlPattern": "github"
+        }
+    }
+}
