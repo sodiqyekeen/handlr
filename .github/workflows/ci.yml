@@ -5,6 +5,26 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run tests'
+        required: false
+        default: true
+        type: boolean
+      build_configuration:
+        description: 'Build configuration'
+        required: false
+        default: 'Release'
+        type: choice
+        options:
+          - 'Release'
+          - 'Debug'
+      upload_packages:
+        description: 'Upload packages to GitHub Packages (preview)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   test:
@@ -34,12 +54,14 @@ jobs:
       run: dotnet restore
 
     - name: Build
-      run: dotnet build --no-restore --configuration Release
+      run: dotnet build --no-restore --configuration ${{ inputs.build_configuration || 'Release' }}
 
     - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+      if: inputs.run_tests != false
+      run: dotnet test --no-build --configuration ${{ inputs.build_configuration || 'Release' }} --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
 
     - name: Upload coverage to Codecov
+      if: inputs.run_tests != false
       uses: codecov/codecov-action@v4
       with:
         directory: ./coverage
@@ -137,8 +159,8 @@ jobs:
 
     - name: Pack NuGet packages
       run: |
-        dotnet pack src/Handlr.Abstractions --configuration Release --no-build --output ./packages
-        dotnet pack src/Handlr.SourceGenerator --configuration Release --no-build --output ./packages
+        dotnet pack src/Handlr.Abstractions --configuration ${{ inputs.build_configuration || 'Release' }} --no-build --output ./packages
+        dotnet pack src/Handlr.SourceGenerator --configuration ${{ inputs.build_configuration || 'Release' }} --no-build --output ./packages
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
@@ -148,7 +170,7 @@ jobs:
         retention-days: 30
 
     - name: Upload packages to GitHub Packages (Preview)
-      if: github.ref == 'refs/heads/main'
+      if: (github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch') || (github.event_name == 'workflow_dispatch' && inputs.upload_packages)
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |

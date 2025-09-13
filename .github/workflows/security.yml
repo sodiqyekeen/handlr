@@ -7,11 +7,38 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      run_trufflehog:
+        description: 'Run TruffleHog secret scanning'
+        required: false
+        default: true
+        type: boolean
+      run_codeql:
+        description: 'Run CodeQL analysis'
+        required: false
+        default: true
+        type: boolean
+      run_dependency_scan:
+        description: 'Run dependency vulnerability scan'
+        required: false
+        default: true
+        type: boolean
+      scan_depth:
+        description: 'Scan depth for TruffleHog'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - 'full'
+          - 'shallow'
+          - 'recent'
 
 jobs:
   dependency-scan:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
+    if: inputs.run_dependency_scan != false
     
     steps:
     - name: Checkout code
@@ -77,6 +104,7 @@ jobs:
   codeql-analysis:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    if: inputs.run_codeql != false
     permissions:
       security-events: write
       actions: read
@@ -107,6 +135,7 @@ jobs:
   secrets-scan:
     name: Secrets Scan
     runs-on: ubuntu-latest
+    if: inputs.run_trufflehog != false
     
     steps:
     - name: Checkout code
@@ -130,14 +159,14 @@ jobs:
         fi
 
     - name: Run TruffleHog (Full Repository Scan)
-      if: steps.commit-range.outputs.scan_type == 'full'
+      if: steps.commit-range.outputs.scan_type == 'full' || inputs.scan_depth == 'full'
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./
         extra_args: --debug --only-verified
 
     - name: Run TruffleHog (Diff Scan)
-      if: steps.commit-range.outputs.scan_type == 'diff'
+      if: (steps.commit-range.outputs.scan_type == 'diff' && inputs.scan_depth != 'full') || inputs.scan_depth == 'recent'
       uses: trufflesecurity/trufflehog@main
       continue-on-error: true
       with:
@@ -146,8 +175,15 @@ jobs:
         head: ${{ steps.commit-range.outputs.head }}
         extra_args: --debug --only-verified
 
+    - name: Run TruffleHog (Shallow Scan)
+      if: inputs.scan_depth == 'shallow'
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        extra_args: --debug --only-verified --max-depth=1
+
     - name: Fallback TruffleHog (Full Scan on Diff Failure)
-      if: steps.commit-range.outputs.scan_type == 'diff' && failure()
+      if: (steps.commit-range.outputs.scan_type == 'diff' && failure()) && inputs.scan_depth != 'shallow'
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./

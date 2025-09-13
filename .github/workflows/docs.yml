@@ -13,6 +13,28 @@ on:
       - 'docs/**'
       - '**.md'
       - 'src/**/*.cs'
+  workflow_dispatch:
+    inputs:
+      deploy_to_pages:
+        description: 'Deploy to GitHub Pages'
+        required: false
+        default: true
+        type: boolean
+      validate_links:
+        description: 'Validate documentation links'
+        required: false
+        default: true
+        type: boolean
+      force_rebuild:
+        description: 'Force complete rebuild of documentation'
+        required: false
+        default: false
+        type: boolean
+      include_api_docs:
+        description: 'Include API documentation generation'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build-docs:
@@ -42,7 +64,14 @@ jobs:
         dotnet build src/Handlr.Abstractions --configuration Release
         echo "Built core abstractions for documentation generation"
 
+    - name: Clean previous builds
+      if: inputs.force_rebuild
+      run: |
+        echo "🧹 Force rebuild requested - cleaning previous builds"
+        rm -rf _site/ api/ obj/ || true
+        
     - name: Generate API documentation
+      if: inputs.include_api_docs != false
       run: |
         # Use existing docfx.json configuration
         if [ -f "docfx.json" ]; then
@@ -128,7 +157,7 @@ jobs:
     name: Deploy Documentation
     runs-on: ubuntu-latest
     needs: build-docs
-    if: github.ref == 'refs/heads/main'
+    if: (github.ref == 'refs/heads/main' && github.event_name != 'workflow_dispatch') || (github.event_name == 'workflow_dispatch' && inputs.deploy_to_pages != false)
     permissions:
       pages: write
       id-token: write
@@ -159,12 +188,14 @@ jobs:
   validate-links:
     name: Validate Documentation Links
     runs-on: ubuntu-latest
+    if: inputs.validate_links != false
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Check markdown links
+      if: inputs.validate_links != false
       uses: gaurav-nelson/github-action-markdown-link-check@v1
       with:
         use-quiet-mode: 'yes'
