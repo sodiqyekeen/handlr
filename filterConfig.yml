@@ -11,3 +11,9 @@ apiRules:
 - exclude:
     uidRegex: \.Examples?\.
     type: Namespace
+- exclude:
+    uidRegex: \.SourceGenerator\.
+    type: Namespace
+- exclude:
+    uidRegex: Handlr\.SourceGenerator
+    type: Namespace

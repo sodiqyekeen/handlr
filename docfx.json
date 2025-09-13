@@ -9,7 +9,8 @@
                     "exclude": [
                         "**/bin/**",
                         "**/obj/**",
-                        "**/packages/**"
+                        "**/packages/**",
+                        "src/Handlr.SourceGenerator/**"
                     ]
                 }
             ],
