@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis;
 using Handlr.SourceGenerator.Models;
 using Handlr.SourceGenerator.Templates;
+using Microsoft.CodeAnalysis;
 
 namespace Handlr.SourceGenerator.Generators;
 

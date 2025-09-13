@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using Handlr.SourceGenerator.Diagnostics;
+using Handlr.SourceGenerator.Generators;
+using Handlr.SourceGenerator.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using Handlr.SourceGenerator.Models;
-using Handlr.SourceGenerator.Generators;
-using Handlr.SourceGenerator.Diagnostics;
 
 namespace Handlr.SourceGenerator;
 

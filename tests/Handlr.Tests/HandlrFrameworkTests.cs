@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
 using Handlr.Abstractions.Commands;
-using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Pipelines;
+using Handlr.Abstractions.Queries;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Handlr.Tests;
 

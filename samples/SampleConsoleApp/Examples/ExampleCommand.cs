@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SampleConsoleApp.Examples;
 using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Results;
+using SampleConsoleApp.Examples;
 
 namespace SampleConsoleApp.Examples;
 

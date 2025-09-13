@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis;
-using Handlr.SourceGenerator.Models;
 using Handlr.SourceGenerator.Diagnostics;
+using Handlr.SourceGenerator.Models;
+using Microsoft.CodeAnalysis;
 
 namespace Handlr.SourceGenerator.Generators;
 

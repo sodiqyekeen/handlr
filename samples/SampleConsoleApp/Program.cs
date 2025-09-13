@@ -1,10 +1,10 @@
-﻿using SampleConsoleApp;
-using SampleConsoleApp.Commands;
-using SampleConsoleApp.Queries;
-using SampleConsoleApp.Examples;
-using Handlr.Abstractions.Results;
 using Handlr.Abstractions.Common;
 using Handlr.Abstractions.Pipelines;
+using Handlr.Abstractions.Results;
+using SampleConsoleApp;
+using SampleConsoleApp.Commands;
+using SampleConsoleApp.Examples;
+using SampleConsoleApp.Queries;
 
 // First check debug info to see what's being discovered
 Console.WriteLine("=== Source Generator Debug Info ===");

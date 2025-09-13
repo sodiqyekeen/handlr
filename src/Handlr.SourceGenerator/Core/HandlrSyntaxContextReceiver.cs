@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using Handlr.SourceGenerator.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Handlr.SourceGenerator.Models;
 
 namespace Handlr.SourceGenerator.Core;
 
