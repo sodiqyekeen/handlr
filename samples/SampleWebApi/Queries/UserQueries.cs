@@ -1,5 +1,5 @@
-using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Common;
+using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Results;
 
 namespace SampleWebApi.Queries;

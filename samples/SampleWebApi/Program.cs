@@ -2,9 +2,9 @@ using Handlr.Abstractions.Common;
 using Handlr.Abstractions.Pipelines;
 using Handlr.Abstractions.Results;
 using Microsoft.AspNetCore.Mvc;
+using SampleWebApi.Behaviors;
 using SampleWebApi.Commands;
 using SampleWebApi.Queries;
-using SampleWebApi.Behaviors;
 
 var builder = WebApplication.CreateBuilder(args);
 

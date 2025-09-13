@@ -1,5 +1,5 @@
-using Handlr.Abstractions.Pipelines;
 using System.Diagnostics;
+using Handlr.Abstractions.Pipelines;
 
 namespace SampleWebApi.Behaviors;
 
