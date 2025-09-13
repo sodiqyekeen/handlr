@@ -1,10 +1,20 @@
-# Handlr - Modern CQRS Framework with Source Generator
+<div align="center">
+  <img src="assets/logos/handlr-logo.svg" alt="Handlr Logo" width="200" height="200" />
+  
+  # Handlr - Modern CQRS Framework with Source Generator
+  
+  *CQRS Made Simple*
+</div>
+
+<div align="center">
 
 [![NuGet](https://img.shields.io/nuget/v/Handlr.svg)](https://www.nuget.org/packages/Handlr/)
 [![CI](https://github.com/sodiqyekeen/handlr/workflows/CI/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/ci.yml)
 [![Release](https://github.com/sodiqyekeen/handlr/workflows/Release/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/release.yml)
 [![Security](https://github.com/sodiqyekeen/handlr/workflows/Security/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
 [![Docs](https://github.com/sodiqyekeen/handlr/workflows/Documentation/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/docs.yml)
+
+</div>
 
 A comprehensive CQRS (Command Query Responsibility Segregation) framework for .NET with automatic code generation and pipeline behavior support.
 

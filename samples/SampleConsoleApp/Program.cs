@@ -70,5 +70,14 @@ Console.WriteLine(@"
 Console.WriteLine("The framework handles the pipeline execution automatically!");
 Console.WriteLine();
 Console.WriteLine("Build and run this sample to see the source generator in action!");
-Console.WriteLine("Press any key to exit...");
-Console.ReadKey();
+
+// Only wait for key press in interactive environments
+if (Environment.UserInteractive && !Console.IsInputRedirected)
+{
+    Console.WriteLine("Press any key to exit...");
+    Console.ReadKey();
+}
+else
+{
+    Console.WriteLine("Sample completed successfully.");
+}

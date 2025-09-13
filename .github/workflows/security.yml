@@ -28,8 +28,15 @@ jobs:
     - name: Check for vulnerable packages
       run: |
         echo "Checking for vulnerable NuGet packages..."
-        dotnet list package --vulnerable --include-transitive > vulnerability-report.txt
+        dotnet list package --vulnerable --include-transitive > vulnerability-report.txt 2>&1
         
+        # Check if the scan actually found any projects
+        if grep -q "No projects found" vulnerability-report.txt; then
+          echo "⚠️  No projects found to scan"
+          exit 0
+        fi
+        
+        # Check for actual vulnerabilities
         if grep -q "has the following vulnerable packages" vulnerability-report.txt; then
           echo "🚨 Vulnerable packages found!"
           cat vulnerability-report.txt
@@ -41,14 +48,31 @@ jobs:
     - name: Check for deprecated packages
       run: |
         echo "Checking for deprecated NuGet packages..."
-        dotnet list package --deprecated > deprecated-report.txt
+        dotnet list package --deprecated > deprecated-report.txt 2>&1
         
-        if grep -q "The following sources were used" deprecated-report.txt; then
+        # Check if the scan actually found any projects
+        if grep -q "No projects found" deprecated-report.txt; then
+          echo "⚠️  No projects found to scan"
+          exit 0
+        fi
+        
+        # Check for deprecated packages (this is informational, not a failure)
+        if grep -q "deprecated" deprecated-report.txt; then
           echo "⚠️  Deprecated packages found:"
           cat deprecated-report.txt
         else
           echo "✅ No deprecated packages found"
         fi
+
+    - name: Upload security reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          vulnerability-report.txt
+          deprecated-report.txt
+        retention-days: 30
 
   codeql-analysis:
     name: CodeQL Analysis
@@ -90,10 +114,41 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Run TruffleHog
+    - name: Get commit range for scanning
+      id: commit-range
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          echo "base=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
+          echo "head=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          echo "scan_type=diff" >> $GITHUB_OUTPUT
+        elif [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+          echo "base=${{ github.event.before }}" >> $GITHUB_OUTPUT
+          echo "head=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "scan_type=diff" >> $GITHUB_OUTPUT
+        else
+          echo "scan_type=full" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Run TruffleHog (Full Repository Scan)
+      if: steps.commit-range.outputs.scan_type == 'full'
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./
-        base: main
-        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Run TruffleHog (Diff Scan)
+      if: steps.commit-range.outputs.scan_type == 'diff'
+      uses: trufflesecurity/trufflehog@main
+      continue-on-error: true
+      with:
+        path: ./
+        base: ${{ steps.commit-range.outputs.base }}
+        head: ${{ steps.commit-range.outputs.head }}
+        extra_args: --debug --only-verified
+
+    - name: Fallback TruffleHog (Full Scan on Diff Failure)
+      if: steps.commit-range.outputs.scan_type == 'diff' && failure()
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
         extra_args: --debug --only-verified

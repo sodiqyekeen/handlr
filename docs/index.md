@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="../assets/logos/handlr-logo.svg" alt="Handlr Logo" width="150" height="150" />
+</div>
+
 # Handlr CQRS Framework Documentation
 
 Welcome to the comprehensive documentation for the Handlr CQRS Framework - a modern, source generator-powered CQRS implementation for .NET 9.0.
