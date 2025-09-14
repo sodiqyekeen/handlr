@@ -8,7 +8,9 @@
         <AssemblyVersion>1.0.0</AssemblyVersion>
         <FileVersion>1.0.0</FileVersion>
         <Authors>Sodiq Yekeen</Authors>
-        <Description>A modern CQRS framework with source generator-powered automatic code generation. Provides clean command/query handling with pipeline behaviors for cross-cutting concerns.</Description>
+        <Description>A modern CQRS framework with source generator-powered automatic code
+            generation. Provides clean command/query handling with pipeline behaviors for
+            cross-cutting concerns.</Description>
         <PackageId>Handlr</PackageId>
         <PackageTags>CQRS;Source Generator;Handler;Command;Query;Validation;MediatR</PackageTags>
         <PackageProjectUrl>https://github.com/sodiqyekeen/handlr</PackageProjectUrl>
