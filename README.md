@@ -1,12 +1,8 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/sodiqyekeen/handlr/main/assets/logos/handlr-nuget-icon.svg" alt="Handlr Logo" width="128" height="128" />
-  
-  # Handlr - Modern CQRS Framework with Source Generator
-  
-  *CQRS Made Simple*
-</div>
+# Handlr - Modern CQRS Framework with Source Generator
 
-<div align="center">
+![Handlr Logo](https://raw.githubusercontent.com/sodiqyekeen/handlr/main/assets/logos/handlr-nuget-icon.svg)
+
+*CQRS Made Simple*
 
 [![NuGet - Handlr.Abstractions](https://img.shields.io/nuget/v/Handlr.Abstractions.svg?label=Handlr.Abstractions)](https://www.nuget.org/packages/Handlr.Abstractions/)
 [![NuGet - Handlr.SourceGenerator](https://img.shields.io/nuget/v/Handlr.SourceGenerator.svg?label=Handlr.SourceGenerator)](https://www.nuget.org/packages/Handlr.SourceGenerator/)
@@ -14,8 +10,6 @@
 [![Release](https://github.com/sodiqyekeen/handlr/workflows/Release/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/release.yml)
 [![Security Scan](https://github.com/sodiqyekeen/handlr/workflows/Security%20Scan/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
 [![Documentation](https://github.com/sodiqyekeen/handlr/workflows/Documentation/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/docs.yml)
-
-</div>
 
 A lightweight CQRS (Command Query Responsibility Segregation) framework for .NET that provides the infrastructure for building scalable applications with automatic code generation and extensible pipeline behavior support.
 
