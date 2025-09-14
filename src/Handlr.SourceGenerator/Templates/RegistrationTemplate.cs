@@ -141,7 +141,7 @@ public static class RegistrationTemplate
         sb.AppendLine("    }");
         sb.AppendLine();
 
-       
+
         // Add individual registration methods for flexibility
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Adds command handlers to the service collection.");
