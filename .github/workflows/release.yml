@@ -58,27 +58,38 @@ jobs:
             VERSION="${{ github.event.inputs.custom_version }}"
           else
             # Calculate version based on increment type
-            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -1 2>/dev/null || echo "v0.0.0")
             LATEST_VERSION="${LATEST_TAG#v}"
             
-            # Parse semantic version
-            IFS='.' read -ra VERSION_PARTS <<< "$LATEST_VERSION"
-            MAJOR=${VERSION_PARTS[0]:-0}
-            MINOR=${VERSION_PARTS[1]:-0}
-            PATCH=${VERSION_PARTS[2]:-0}
+            echo "Found latest tag: $LATEST_TAG (version: $LATEST_VERSION)"
+            
+            # Parse semantic version (compatible with both macOS and Linux)
+            MAJOR=$(echo "$LATEST_VERSION" | cut -d'.' -f1)
+            MINOR=$(echo "$LATEST_VERSION" | cut -d'.' -f2)  
+            PATCH=$(echo "$LATEST_VERSION" | cut -d'.' -f3)
+            
+            # Default to 0 if any part is empty
+            MAJOR=${MAJOR:-0}
+            MINOR=${MINOR:-0}
+            PATCH=${PATCH:-0}
+            
+            echo "Parsed version: $MAJOR.$MINOR.$PATCH"
             
             case "${{ github.event.inputs.version_type }}" in
               major)
                 MAJOR=$((MAJOR + 1))
                 MINOR=0
                 PATCH=0
+                echo "Major increment: $MAJOR.$MINOR.$PATCH"
                 ;;
               minor)
                 MINOR=$((MINOR + 1))
                 PATCH=0
+                echo "Minor increment: $MAJOR.$MINOR.$PATCH"
                 ;;
               patch)
                 PATCH=$((PATCH + 1))
+                echo "Patch increment: $MAJOR.$MINOR.$PATCH"
                 ;;
             esac
             
