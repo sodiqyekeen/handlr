@@ -379,35 +379,6 @@ jobs:
           echo "- 🎯 **Clean Architecture**: Promotes CQRS best practices and clean code" >> release-notes.md
           echo "" >> release-notes.md
         fi
-            echo "" >> release-notes.md
-          fi
-          
-          if [[ -n "$DOCS" ]]; then
-            echo "#### 📚 Documentation" >> release-notes.md
-            echo "$DOCS" >> release-notes.md
-            echo "" >> release-notes.md
-          fi
-          
-          if [[ -n "$CHORES" ]]; then
-            echo "#### 🔧 Maintenance" >> release-notes.md
-            echo "$CHORES" >> release-notes.md
-            echo "" >> release-notes.md
-          fi
-          
-          # Show all commits if no categorized commits found
-          OTHER_COMMITS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --invert-grep --grep="feat\|feature\|fix\|bug\|doc\|readme\|chore\|refactor\|style" -i || true)
-          if [[ -n "$OTHER_COMMITS" ]]; then
-            echo "#### 🔄 Other Changes" >> release-notes.md
-            echo "$OTHER_COMMITS" >> release-notes.md
-            echo "" >> release-notes.md
-          fi
-        else
-          echo "### 🎉 Initial Release" >> release-notes.md
-          echo "- Initial release of Handlr CQRS Framework" >> release-notes.md
-          echo "- Source generator-powered CQRS implementation for .NET 9.0" >> release-notes.md
-          echo "- Zero runtime reflection with high performance" >> release-notes.md
-          echo "" >> release-notes.md
-        fi
         
         # Technical Information
         echo "## ⚙️ Technical Details" >> release-notes.md
