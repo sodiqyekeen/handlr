@@ -156,8 +156,12 @@ jobs:
       run: |
         # Update Directory.Build.props with the release version
         sed -i "s/<Version>.*<\/Version>/<Version>${RELEASE_VERSION}<\/Version>/" Directory.Build.props
+        sed -i "s/<VersionPrefix>.*<\/VersionPrefix>/<VersionPrefix>${RELEASE_VERSION}<\/VersionPrefix>/" Directory.Build.props
         sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${RELEASE_VERSION}<\/AssemblyVersion>/" Directory.Build.props
         sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${RELEASE_VERSION}<\/FileVersion>/" Directory.Build.props
+        
+        echo "Updated versions in Directory.Build.props:"
+        cat Directory.Build.props | grep -E "<Version>|<VersionPrefix>|<AssemblyVersion>|<FileVersion>"
 
     - name: Restore dependencies
       run: dotnet restore
@@ -344,6 +348,7 @@ jobs:
       run: |
         if [[ -z "$NUGET_API_KEY" ]]; then
           echo "⚠️ NUGET_API_KEY not configured, skipping NuGet.org publish"
+          echo "🔍 To publish to NuGet.org, add NUGET_API_KEY secret to repository settings"
         else
           echo "📦 Publishing to NuGet.org..."
           dotnet nuget push ./packages/*.nupkg \
