@@ -219,11 +219,26 @@ jobs:
       run: |
         VERSION="${{ needs.determine-version.outputs.version }}"
         
-        # Get the latest tag (previous release)
-        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        # Get the latest tag (previous release) - use the same logic as version calculation
+        PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname | head -2 | tail -1 2>/dev/null || echo "")
+        if [[ "$PREVIOUS_TAG" == "v$VERSION" ]]; then
+          # If current version is the latest, get the second latest
+          PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname | head -3 | tail -1 2>/dev/null || echo "")
+        fi
+        
+        echo "Generating release notes for v$VERSION (previous: $PREVIOUS_TAG)"
         
         # Start building release notes
         echo "# 🚀 Handlr CQRS Framework v$VERSION" > release-notes.md
+        echo "" >> release-notes.md
+        
+        # Add release date and type
+        RELEASE_DATE=$(date '+%B %d, %Y')
+        if [[ "${{ needs.determine-version.outputs.is_prerelease }}" == "true" ]]; then
+          echo "**🔬 Pre-release** • Released on $RELEASE_DATE" >> release-notes.md
+        else
+          echo "**✅ Stable Release** • Released on $RELEASE_DATE" >> release-notes.md
+        fi
         echo "" >> release-notes.md
         
         # Add custom release notes if provided
@@ -242,21 +257,128 @@ jobs:
           echo "### 🔄 Changes since $PREVIOUS_TAG:" >> release-notes.md
           echo "" >> release-notes.md
           
-          # Categorize commits
-          FEATURES=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="feat" --grep="feature" -i || true)
-          FIXES=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="fix" --grep="bug" -i || true)
-          DOCS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="doc" --grep="readme" -i || true)
-          CHORES=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="chore" --grep="refactor" --grep="style" -i || true)
+          # Enhanced commit categorization
+          BREAKING=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="BREAKING" --grep="breaking change" -i || true)
+          FEATURES=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="feat" --grep="feature" --grep="add" -i || true)
+          IMPROVEMENTS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="improve" --grep="enhance" --grep="perf" --grep="performance" -i || true)
+          FIXES=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="fix" --grep="bug" --grep="resolve" -i || true)
+          SECURITY=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="security" --grep="vulnerability" --grep="CVE" -i || true)
+          DOCS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="doc" --grep="readme" --grep="documentation" -i || true)
+          TESTS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="test" --grep="spec" --grep="coverage" -i || true)
+          CI_CD=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="ci" --grep="cd" --grep="pipeline" --grep="workflow" --grep="github" -i || true)
+          DEPS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="deps" --grep="dependencies" --grep="bump" --grep="update.*package" -i || true)
+          CHORES=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD --grep="chore" --grep="refactor" --grep="style" --grep="format" -i || true)
+          
+          # Show breaking changes first if any
+          if [[ -n "$BREAKING" ]]; then
+            echo "#### ⚠️ Breaking Changes" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$BREAKING" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "> **Note:** This release contains breaking changes. Please review the migration guide in our documentation." >> release-notes.md
+            echo "" >> release-notes.md
+          fi
           
           if [[ -n "$FEATURES" ]]; then
             echo "#### ✨ New Features" >> release-notes.md
+            echo "" >> release-notes.md
             echo "$FEATURES" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$IMPROVEMENTS" ]]; then
+            echo "#### 🚀 Improvements" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$IMPROVEMENTS" >> release-notes.md
             echo "" >> release-notes.md
           fi
           
           if [[ -n "$FIXES" ]]; then
             echo "#### 🐛 Bug Fixes" >> release-notes.md
+            echo "" >> release-notes.md
             echo "$FIXES" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$SECURITY" ]]; then
+            echo "#### 🔒 Security" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$SECURITY" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$DOCS" ]]; then
+            echo "#### 📚 Documentation" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$DOCS" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$TESTS" ]]; then
+            echo "#### 🧪 Testing" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$TESTS" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$CI_CD" ]]; then
+            echo "#### 🔧 CI/CD & Infrastructure" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$CI_CD" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$DEPS" ]]; then
+            echo "#### 📦 Dependencies" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$DEPS" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          if [[ -n "$CHORES" ]]; then
+            echo "#### 🔧 Maintenance" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$CHORES" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          # Show all other commits if no categorized commits found
+          OTHER_COMMITS=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD \
+            --invert-grep \
+            --grep="BREAKING\|breaking change\|feat\|feature\|add\|improve\|enhance\|perf\|performance\|fix\|bug\|resolve\|security\|vulnerability\|CVE\|doc\|readme\|documentation\|test\|spec\|coverage\|ci\|cd\|pipeline\|workflow\|github\|deps\|dependencies\|bump\|update.*package\|chore\|refactor\|style\|format" \
+            -i || true)
+          if [[ -n "$OTHER_COMMITS" ]]; then
+            echo "#### 🔄 Other Changes" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$OTHER_COMMITS" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+          # Add contributor acknowledgments
+          CONTRIBUTORS=$(git log --pretty=format:"%an" $PREVIOUS_TAG..HEAD | sort | uniq | grep -v "dependabot" | tr '\n' ', ' | sed 's/, $//' || true)
+          if [[ -n "$CONTRIBUTORS" ]]; then
+            echo "#### 👥 Contributors" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "Thanks to all contributors who made this release possible: **$CONTRIBUTORS**" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+          
+        else
+          echo "### 🎉 Initial Release" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "This is the initial release of Handlr CQRS Framework! 🎊" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "#### ✨ Key Features" >> release-notes.md
+          echo "- 🔄 **Source Generator Powered**: Automatic discovery and registration of commands, queries, and handlers" >> release-notes.md
+          echo "- 🛡️ **Pipeline Behaviors**: Comprehensive cross-cutting concerns (validation, logging, caching, authorization, retry, metrics)" >> release-notes.md
+          echo "- 🎯 **Type-Safe**: Strong typing with compile-time validation" >> release-notes.md
+          echo "- 🔄 **Flexible Results**: Support for any return type including \`Result<T>\` pattern" >> release-notes.md
+          echo "- 🏗️ **Dependency Injection Ready**: Built for modern .NET DI containers" >> release-notes.md
+          echo "- 📖 **Example-Driven**: Rich examples and templates for rapid development" >> release-notes.md
+          echo "- ⚡ **High Performance**: Zero runtime reflection with source generation" >> release-notes.md
+          echo "- 🎯 **Clean Architecture**: Promotes CQRS best practices and clean code" >> release-notes.md
+          echo "" >> release-notes.md
+        fi
             echo "" >> release-notes.md
           fi
           
@@ -287,39 +409,156 @@ jobs:
           echo "" >> release-notes.md
         fi
         
+        # Technical Information
+        echo "## ⚙️ Technical Details" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "- **Target Framework**: .NET Standard 2.0" >> release-notes.md
+        echo "- **Compatible with**: .NET 6.0+, .NET Framework 4.6.1+" >> release-notes.md
+        echo "- **C# Language Version**: Latest" >> release-notes.md
+        echo "- **Package Format**: PackageReference (modern .NET projects)" >> release-notes.md
+        echo "- **Source Generator**: Incremental source generation for optimal performance" >> release-notes.md
+        echo "" >> release-notes.md
+        
         # Package information
         echo "## 📦 NuGet Packages" >> release-notes.md
         echo "" >> release-notes.md
-        echo "| Package | Version | Description |" >> release-notes.md
-        echo "|---------|---------|-------------|" >> release-notes.md
-        echo "| [Handlr.Abstractions](https://www.nuget.org/packages/Handlr.Abstractions/) | \`$VERSION\` | Core abstractions and interfaces for CQRS |" >> release-notes.md
-        echo "| [Handlr.SourceGenerator](https://www.nuget.org/packages/Handlr.SourceGenerator/) | \`$VERSION\` | Source generator for automatic handler generation |" >> release-notes.md
+        echo "| Package | Version | Downloads | Description |" >> release-notes.md
+        echo "|---------|---------|-----------|-------------|" >> release-notes.md
+        echo "| [Handlr.Abstractions](https://www.nuget.org/packages/Handlr.Abstractions/) | \`$VERSION\` | [![NuGet](https://img.shields.io/nuget/dt/Handlr.Abstractions.svg)](https://www.nuget.org/packages/Handlr.Abstractions/) | Core abstractions and interfaces for CQRS |" >> release-notes.md
+        echo "| [Handlr.SourceGenerator](https://www.nuget.org/packages/Handlr.SourceGenerator/) | \`$VERSION\` | [![NuGet](https://img.shields.io/nuget/dt/Handlr.SourceGenerator.svg)](https://www.nuget.org/packages/Handlr.SourceGenerator/) | Source generator for automatic handler generation |" >> release-notes.md
         echo "" >> release-notes.md
         
         # Installation instructions
         echo "## 🛠️ Installation" >> release-notes.md
         echo "" >> release-notes.md
-        echo "\`\`\`bash" >> release-notes.md
-        echo "# Install via .NET CLI" >> release-notes.md
-        echo "dotnet add package Handlr.Abstractions --version $VERSION" >> release-notes.md
-        echo "dotnet add package Handlr.SourceGenerator --version $VERSION" >> release-notes.md
-        echo "" >> release-notes.md
-        echo "# Or via Package Manager Console" >> release-notes.md
+        echo "### Package Manager Console" >> release-notes.md
+        echo "\`\`\`powershell" >> release-notes.md
         echo "Install-Package Handlr.Abstractions -Version $VERSION" >> release-notes.md
         echo "Install-Package Handlr.SourceGenerator -Version $VERSION" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### .NET CLI" >> release-notes.md
+        echo "\`\`\`bash" >> release-notes.md
+        echo "dotnet add package Handlr.Abstractions --version $VERSION" >> release-notes.md
+        echo "dotnet add package Handlr.SourceGenerator --version $VERSION" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### PackageReference (csproj)" >> release-notes.md
+        echo "\`\`\`xml" >> release-notes.md
+        echo "<PackageReference Include=\"Handlr.Abstractions\" Version=\"$VERSION\" />" >> release-notes.md
+        echo "<PackageReference Include=\"Handlr.SourceGenerator\" Version=\"$VERSION\">" >> release-notes.md
+        echo "  <OutputItemType>Analyzer</OutputItemType>" >> release-notes.md
+        echo "  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>" >> release-notes.md
+        echo "</PackageReference>" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+        echo "" >> release-notes.md
+        
+        # Quick start guide
+        echo "## 🚀 Quick Start" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### 1. Define Commands and Queries" >> release-notes.md
+        echo "\`\`\`csharp" >> release-notes.md
+        echo "// Command" >> release-notes.md
+        echo "public record CreateUserCommand : ICommand<Result<User>>" >> release-notes.md
+        echo "{" >> release-notes.md
+        echo "    public string Name { get; init; } = string.Empty;" >> release-notes.md
+        echo "    public string Email { get; init; } = string.Empty;" >> release-notes.md
+        echo "}" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "// Query" >> release-notes.md
+        echo "public record GetUserQuery : IQuery<Result<User>>" >> release-notes.md
+        echo "{" >> release-notes.md
+        echo "    public int UserId { get; init; };" >> release-notes.md
+        echo "}" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### 2. Implement Handlers" >> release-notes.md
+        echo "\`\`\`csharp" >> release-notes.md
+        echo "public partial class CreateUserCommandHandler" >> release-notes.md
+        echo "{" >> release-notes.md
+        echo "    public partial async Task<Result<User>> HandleAsync(" >> release-notes.md
+        echo "        CreateUserCommand command, CancellationToken cancellationToken)" >> release-notes.md
+        echo "    {" >> release-notes.md
+        echo "        // Your business logic here" >> release-notes.md
+        echo "        var user = new User(command.Name, command.Email);" >> release-notes.md
+        echo "        return Result<User>.Success(user);" >> release-notes.md
+        echo "    }" >> release-notes.md
+        echo "}" >> release-notes.md
+        echo "\`\`\`" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "### 3. Register and Use" >> release-notes.md
+        echo "\`\`\`csharp" >> release-notes.md
+        echo "// Register services (automatically generated)" >> release-notes.md
+        echo "services.AddHandlr();" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "// Use in controllers or services" >> release-notes.md
+        echo "var result = await handlr.SendAsync(new CreateUserCommand" >> release-notes.md
+        echo "{ " >> release-notes.md
+        echo "    Name = \"John Doe\", " >> release-notes.md
+        echo "    Email = \"john@example.com\" " >> release-notes.md
+        echo "});" >> release-notes.md
         echo "\`\`\`" >> release-notes.md
         echo "" >> release-notes.md
         
         # Additional resources
         echo "## 📖 Resources" >> release-notes.md
         echo "" >> release-notes.md
-        echo "- 📚 [Documentation](https://sodiqyekeen.github.io/handlr/)" >> release-notes.md
-        echo "- 🔧 [API Reference](https://sodiqyekeen.github.io/handlr/api/)" >> release-notes.md
-        echo "- 💡 [Sample Projects](https://github.com/sodiqyekeen/handlr/tree/main/samples)" >> release-notes.md
-        echo "- 🐛 [Report Issues](https://github.com/sodiqyekeen/handlr/issues)" >> release-notes.md
+        echo "| Resource | Link | Description |" >> release-notes.md
+        echo "|----------|------|-------------|" >> release-notes.md
+        echo "| 📚 Documentation | [sodiqyekeen.github.io/handlr](https://sodiqyekeen.github.io/handlr/) | Complete framework documentation |" >> release-notes.md
+        echo "| 🔧 API Reference | [API Docs](https://sodiqyekeen.github.io/handlr/api/) | Detailed API documentation |" >> release-notes.md
+        echo "| 💡 Sample Projects | [GitHub Samples](https://github.com/sodiqyekeen/handlr/tree/main/samples) | Working examples and templates |" >> release-notes.md
+        echo "| 🧪 Getting Started | [Quick Start Guide](https://sodiqyekeen.github.io/handlr/docs/getting-started/) | Step-by-step setup instructions |" >> release-notes.md
+        echo "| 🎯 Pipeline Behaviors | [Behavior Guide](https://sodiqyekeen.github.io/handlr/docs/behaviors/) | Cross-cutting concerns examples |" >> release-notes.md
+        echo "| 💬 Discussions | [GitHub Discussions](https://github.com/sodiqyekeen/handlr/discussions) | Community support and Q&A |" >> release-notes.md
+        echo "| 🐛 Issues | [GitHub Issues](https://github.com/sodiqyekeen/handlr/issues) | Bug reports and feature requests |" >> release-notes.md
         echo "" >> release-notes.md
+        
+        # Migration guide for non-initial releases
+        if [[ -n "$PREVIOUS_TAG" && -n "$BREAKING" ]]; then
+          echo "## 🔄 Migration Guide" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "This release contains breaking changes. Please follow these steps to migrate:" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "1. **Review Breaking Changes**: Check the breaking changes section above" >> release-notes.md
+          echo "2. **Update Dependencies**: Update to the latest package versions" >> release-notes.md
+          echo "3. **Update Code**: Apply necessary code changes based on breaking changes" >> release-notes.md
+          echo "4. **Test Thoroughly**: Run your test suite to ensure compatibility" >> release-notes.md
+          echo "5. **Check Documentation**: Review updated documentation for new patterns" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "💡 **Need help?** Create a discussion in our [GitHub Discussions](https://github.com/sodiqyekeen/handlr/discussions) for migration support." >> release-notes.md
+          echo "" >> release-notes.md
+        fi
+        
+        # Performance and compatibility notes
+        if [[ -n "$PREVIOUS_TAG" ]]; then
+          echo "## 🎯 Compatibility & Performance" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "- ✅ **Backward Compatible**: This release maintains API compatibility" >> release-notes.md
+          if [[ -n "$BREAKING" ]]; then
+            echo "- ⚠️ **Breaking Changes**: See migration guide above" >> release-notes.md
+          fi
+          echo "- 🚀 **Performance**: Source generation ensures zero runtime reflection" >> release-notes.md
+          echo "- 🎯 **Target Frameworks**: .NET Standard 2.0 (compatible with .NET 6.0+)" >> release-notes.md
+          echo "- 📦 **Package Size**: Optimized for minimal footprint" >> release-notes.md
+          echo "- 🔧 **Build Time**: Incremental source generation for fast builds" >> release-notes.md
+          echo "" >> release-notes.md
+        fi
+        
+        # Footer with community info
         echo "---" >> release-notes.md
-        echo "*Built with ❤️ for the .NET community*" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "## 🌟 Support the Project" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "If you find Handlr useful, please consider:" >> release-notes.md
+        echo "- ⭐ **Starring** the repository on GitHub" >> release-notes.md
+        echo "- 📢 **Sharing** with your colleagues and community" >> release-notes.md
+        echo "- 🐛 **Reporting** issues and suggesting improvements" >> release-notes.md
+        echo "- 🤝 **Contributing** code, documentation, or examples" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "**Built with ❤️ by [Sodiq Yekeen](https://github.com/sodiqyekeen) and the .NET community**" >> release-notes.md
+        echo "" >> release-notes.md
+        echo "_Thank you for using Handlr CQRS Framework!_ 🙏" >> release-notes.md
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
