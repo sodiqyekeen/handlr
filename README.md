@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/logos/handlr-logo.svg" alt="Handlr Logo" width="200" height="200" />
+  <img src="https://raw.githubusercontent.com/sodiqyekeen/handlr/main/assets/logos/handlr-nuget-icon.svg" alt="Handlr Logo" width="128" height="128" />
   
   # Handlr - Modern CQRS Framework with Source Generator
   
@@ -229,8 +229,8 @@ services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehaviorExample<,
 
 ## 📚 Documentation
 
-- **[Pipeline Behaviors Guide](./README-BEHAVIORS.md)** - Comprehensive behavior implementation guide
-- **[Behavior Examples](./samples/SampleConsoleApp/Examples/README.md)** - Complete examples with explanations
+- **[Pipeline Behaviors Guide](https://github.com/sodiqyekeen/handlr/blob/main/README-BEHAVIORS.md)** - Comprehensive behavior implementation guide
+- **[Behavior Examples](https://github.com/sodiqyekeen/handlr/tree/main/samples/SampleConsoleApp/Examples)** - Complete examples with explanations
 
 ## 🏗️ Project Structure
 
@@ -258,7 +258,7 @@ services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehaviorExample<,
 
 1. **Explore Examples**: Check out `samples/SampleConsoleApp/Examples/` for comprehensive behavior examples
 2. **Copy and Adapt**: Use examples as starting points for your implementations
-3. **Understand Patterns**: Review the [Pipeline Behaviors Guide](./README-BEHAVIORS.md)
+3. **Understand Patterns**: Review the [Pipeline Behaviors Guide](https://github.com/sodiqyekeen/handlr/blob/main/README-BEHAVIORS.md)
 4. **Build Your App**: Apply the patterns to your specific use cases
 
 ## 🔧 What You Can Build
@@ -277,7 +277,7 @@ With Handlr's pipeline behavior infrastructure, you can implement:
 
 - Run `dotnet run` in `samples/SampleConsoleApp` to see the framework in action
 - Explore behavior examples in `samples/SampleConsoleApp/Examples/`
-- Read the comprehensive [behaviors documentation](./README-BEHAVIORS.md)
+- Read the comprehensive [behaviors documentation](https://github.com/sodiqyekeen/handlr/blob/main/README-BEHAVIORS.md)
 
 ## Samples
 
@@ -287,7 +287,7 @@ Check out the [samples](samples/) directory for complete working examples:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/sodiqyekeen/handlr/blob/main/CONTRIBUTING.md) for details.
 
 ## 🔄 CI/CD Pipeline
 
@@ -298,15 +298,15 @@ This project uses a comprehensive CI/CD pipeline with:
 - **Security Scanning**: Vulnerability detection and secret scanning
 - **Documentation**: Auto-generated API docs deployed to GitHub Pages
 
-See [CI/CD Pipeline Documentation](.github/CI-CD-PIPELINE.md) for complete details.
+See [CI/CD Pipeline Documentation](https://github.com/sodiqyekeen/handlr/blob/main/.github/CI-CD-PIPELINE.md) for complete details.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/sodiqyekeen/handlr/blob/main/LICENSE) file for details.
 
 ## Support
 
-- 📖 [Documentation](docs/)
+- 📖 [Documentation](https://github.com/sodiqyekeen/handlr/tree/main/docs)
 - 💬 [Discussions](https://github.com/sodiqyekeen/handlr/discussions)
 - 🐛 [Issues](https://github.com/sodiqyekeen/handlr/issues)
 
