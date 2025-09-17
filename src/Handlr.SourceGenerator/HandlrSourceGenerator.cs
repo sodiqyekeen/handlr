@@ -208,20 +208,7 @@ namespace Handlr.Generated
             // Validate for duplicate handlers
             ValidateForDuplicates(context, combinedElements);
 
-            // Generate handlers
-            HandlerGenerator.Generate(
-                context,
-                combinedElements.Commands,
-                combinedElements.Queries,
-                includeDebugInfo);
-
-            // Generate pipeline configuration (disabled temporarily)
-            // PipelineGenerator.Generate(
-            //     context,
-            //     combinedElements.Behaviors,
-            //     includeDebugInfo);
-
-            // Generate service registrations
+            // Generate service registrations with enhanced dispatcher
             RegistrationGenerator.Generate(
                 context,
                 combinedElements.Commands,

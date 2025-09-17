@@ -2,27 +2,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Results;
 using SampleConsoleApp.Queries;
 
 namespace SampleConsoleApp.Queries;
 
 /// <summary>
-/// User implementation of GetUserByIdQuery handler
+/// Handler for GetUserByIdQuery - no partial class required!
 /// </summary>
-public partial class GetUserByIdQueryHandler
+public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, Result<UserDto>>
 {
     /// <summary>
     /// Handles the GetUserByIdQuery
     /// </summary>
-    public partial async Task<Result<UserDto?>> HandleAsync(GetUserByIdQuery query, CancellationToken cancellationToken)
+    public async Task<Result<UserDto>> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
     {
         // Simulate database lookup
         await Task.Delay(100, cancellationToken);
 
         // Simulate user lookup
         if (query.UserId <= 0)
-            return Result<UserDto?>.Failure("Invalid user ID");
+            return Result<UserDto>.Failure("Invalid user ID");
 
         // Simulate finding user
         var user = new UserDto
@@ -34,6 +35,6 @@ public partial class GetUserByIdQueryHandler
             Status = "Active"
         };
 
-        return Result<UserDto?>.Success(user);
+        return Result<UserDto>.Success(user);
     }
 }

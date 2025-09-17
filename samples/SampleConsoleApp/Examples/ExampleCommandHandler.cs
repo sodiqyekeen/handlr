@@ -1,19 +1,19 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Results;
 
 namespace SampleConsoleApp.Examples;
 
 /// <summary>
-/// Example handler for ExampleCommand - shows how the source generator will work
-/// This is the user implementation part of the partial class
+/// Example handler for ExampleCommand - no partial class required!
 /// </summary>
-public partial class ExampleCommandHandler
+public class ExampleCommandHandler : ICommandHandler<ExampleCommand, Result<string>>
 {
     /// <summary>
-    /// Implements the partial method defined by the source generator
+    /// Handles the ExampleCommand
     /// </summary>
-    public partial async Task<Result<string>> HandleAsync(ExampleCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(ExampleCommand command, CancellationToken cancellationToken)
     {
         // Simulate some processing
         await Task.Delay(100, cancellationToken);

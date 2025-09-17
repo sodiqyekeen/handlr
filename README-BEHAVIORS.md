@@ -10,7 +10,8 @@ The Handlr framework follows these principles for pipeline behaviors:
 2. **Interface-Based**: Behaviors are triggered by interfaces that requests implement
 3. **Composable**: Multiple behaviors can be applied to the same request
 4. **Configurable**: Developers control which behaviors apply and in what order
-5. **Source Generator Friendly**: Works seamlessly with generated handler registration
+5. **High Performance**: Switch expression dispatcher with compile-time type safety
+6. **Developer Friendly**: Normal classes implementing standard interfaces - no partial classes!
 
 ## 🏗️ Architecture Overview
 

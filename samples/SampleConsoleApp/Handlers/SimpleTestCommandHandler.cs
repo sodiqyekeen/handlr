@@ -1,16 +1,19 @@
+using System.Threading;
+using System.Threading.Tasks;
+using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Results;
 
 namespace SampleConsoleApp.Commands;
 
 /// <summary>
-/// User implementation of SimpleTestCommand handler
+/// Handler for SimpleTestCommand - no partial class required!
 /// </summary>
-public partial class SimpleTestCommandHandler
+public class SimpleTestCommandHandler : ICommandHandler<SimpleTestCommand, Result<string>>
 {
     /// <summary>
     /// Handles the SimpleTestCommand
     /// </summary>
-    public partial async Task<Result<string>> HandleAsync(SimpleTestCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(SimpleTestCommand command, CancellationToken cancellationToken)
     {
         // Simulate some work
         await Task.Delay(100, cancellationToken);

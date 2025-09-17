@@ -6,10 +6,12 @@ This directory contains comprehensive examples of how to implement pipeline beha
 
 The Handlr framework is built on these principles:
 
-- **Source Generator First**: The framework uses source generators to automatically discover and register handlers
-- **Example-Based Learning**: Instead of providing framework implementations, we provide clear examples you can adapt
-- **Pipeline Architecture**: Behaviors wrap around handlers in a configurable pipeline
-- **Interface-Driven**: Commands and queries implement marker interfaces to opt into specific behaviors
+- **🚀 High Performance**: Switch expression-based dispatcher eliminates reflection overhead
+- **🎯 Developer Friendly**: Normal classes implementing standard interfaces - no partial classes!
+- **🤖 Source Generator**: Automatic discovery with compile-time type safety
+- **📚 Example-Based Learning**: Instead of providing framework implementations, we provide clear examples you can adapt
+- **🔄 Pipeline Architecture**: Behaviors wrap around handlers in a configurable pipeline
+- **🏷️ Interface-Driven**: Commands and queries implement marker interfaces to opt into specific behaviors
 
 ## 📋 Available Behavior Examples
 
@@ -230,14 +232,15 @@ public class CreateOrderCommand : IValidatable, IRequireAuthorization, IMetricsE
 ## 🔄 Integration with Source Generator
 
 The source generator will:
-- Automatically discover commands, queries, and handlers
-- Generate registration code for handlers
-- Provide extension methods for easy DI setup
-- Support partial class patterns for generated handler implementations
+- **⚡ Generate high-performance dispatcher** using switch expressions instead of reflection
+- **🔍 Automatically discover commands, queries, and handlers** with compile-time type safety
+- **📦 Generate registration code for handlers** with direct method calls
+- **🛠️ Provide extension methods for easy DI setup** with performance
+- **🎯 Support normal class patterns** - just implement `ICommandHandler<T,R>` or `IQueryHandler<T,R>`
 
 Behaviors are registered manually to give you full control over:
 - Which behaviors apply to which requests
 - The order of behavior execution
 - Behavior-specific configuration
 
-This approach provides maximum flexibility while maintaining the benefits of automatic code generation for the core CQRS patterns.
+This approach provides maximum flexibility while maintaining the benefits of automatic code generation for the core CQRS patterns with superior performance.

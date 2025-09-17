@@ -61,42 +61,37 @@ public static class RegistrationTemplate
         sb.AppendLine("using Handlr.Generated;");
         sb.AppendLine();
 
-        sb.AppendLine("namespace Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("namespace Handlr.Abstractions.Extensions;");
         sb.AppendLine();
 
         // Generate the extension class
         sb.AppendLine("/// <summary>");
-        sb.AppendLine("/// Extension methods for registering Handlr services.");
+        sb.AppendLine("/// Generated extension methods for registering discovered Handlr handlers.");
         sb.AppendLine("/// </summary>");
-        sb.AppendLine("public static class HandlrServiceCollectionExtensions");
+        sb.AppendLine("public static class GeneratedHandlrServiceCollectionExtensions");
         sb.AppendLine("{");
 
-        // Main registration method
+        // Handler registration method that extends the base AddHandlr
         sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Adds all Handlr services to the service collection.");
+        sb.AppendLine("    /// Adds all discovered Handlr handlers to the service collection.");
+        sb.AppendLine("    /// This extends the base AddHandlr() with automatically discovered handlers.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    /// <param name=\"services\">The service collection</param>");
-        sb.AppendLine("    /// <param name=\"configureOptions\">Optional configuration action</param>");
         sb.AppendLine("    /// <returns>The service collection for chaining</returns>");
-        sb.AppendLine("    public static IServiceCollection AddHandlr(this IServiceCollection services, Action<HandlrOptions>? configureOptions = null)");
+        sb.AppendLine("    public static IServiceCollection AddDiscoveredHandlrHandlers(this IServiceCollection services)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (services == null)");
         sb.AppendLine("            throw new ArgumentNullException(nameof(services));");
         sb.AppendLine();
-        sb.AppendLine("        var options = new HandlrOptions();");
-        sb.AppendLine("        configureOptions?.Invoke(options);");
-        sb.AppendLine();
-        sb.AppendLine("        // Register core services");
-        sb.AppendLine("        services.AddScoped<IHandlrDispatcher, HandlrDispatcher>();");
-        sb.AppendLine("        RegisterHandlers(services);");
-        // sb.AppendLine("        RegisterPipelineBehaviors(services);");
-        sb.AppendLine();
+        sb.AppendLine("        // Register the enhanced generated dispatcher to replace the basic one");
+        sb.AppendLine("        services.AddScoped<IHandlrDispatcher, GeneratedHandlrDispatcher>();");
+        sb.AppendLine("        RegisterDiscoveredHandlers(services);");
         sb.AppendLine("        return services;");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         // Handler registration method
-        sb.AppendLine("    private static void RegisterHandlers(IServiceCollection services)");
+        sb.AppendLine("    private static void RegisterDiscoveredHandlers(IServiceCollection services)");
         sb.AppendLine("    {");
 
         // Register command handlers
@@ -139,51 +134,6 @@ public static class RegistrationTemplate
         }
 
         sb.AppendLine("    }");
-        sb.AppendLine();
-
-
-        // Add individual registration methods for flexibility
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Adds command handlers to the service collection.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    /// <param name=\"services\">The service collection</param>");
-        sb.AppendLine("    /// <returns>The service collection for chaining</returns>");
-        sb.AppendLine("    public static IServiceCollection AddHandlrCommandHandlers(this IServiceCollection services)");
-        sb.AppendLine("    {");
-        sb.AppendLine("        RegisterHandlers(services);");
-        sb.AppendLine("        return services;");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-
-
-        sb.AppendLine("}");
-        sb.AppendLine();
-
-        // Generate the options class
-        sb.AppendLine("/// <summary>");
-        sb.AppendLine("/// Configuration options for Handlr.");
-        sb.AppendLine("/// </summary>");
-        sb.AppendLine("public class HandlrOptions");
-        sb.AppendLine("{");
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Gets or sets a value indicating whether debug information should be included.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    public bool IncludeDebugInfo { get; set; } = false;");
-        sb.AppendLine();
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Gets or sets a value indicating whether caching is enabled for queries.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    public bool EnableCaching { get; set; } = false;");
-        sb.AppendLine();
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Gets or sets a value indicating whether performance metrics should be collected.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    public bool EnableMetrics { get; set; } = false;");
-        sb.AppendLine();
-        sb.AppendLine("    /// <summary>");
-        sb.AppendLine("    /// Gets or sets the default timeout for operations.");
-        sb.AppendLine("    /// </summary>");
-        sb.AppendLine("    public TimeSpan DefaultTimeout { get; set; } = TimeSpan.FromMinutes(5);");
         sb.AppendLine("}");
 
         return sb.ToString();

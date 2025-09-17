@@ -1,17 +1,21 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Results;
 using SampleWebApi.Services;
 
 namespace SampleWebApi.Commands;
 
 /// <summary>
-/// Handler for CreateUserCommand
+/// Handler for CreateUserCommand - no partial class required!
 /// </summary>
-public partial class CreateUserCommandHandler
+public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<int>>
 {
     /// <summary>
     /// Handles the CreateUserCommand
     /// </summary>
-    public partial async Task<Result<int>> HandleAsync(CreateUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
         // Simulate creating a user
         await Task.Delay(100, cancellationToken);
@@ -34,14 +38,14 @@ public partial class CreateUserCommandHandler
 }
 
 /// <summary>
-/// Handler for UpdateUserStatusCommand
+/// Handler for UpdateUserStatusCommand - no partial class required!
 /// </summary>
-public partial class UpdateUserStatusCommandHandler
+public class UpdateUserStatusCommandHandler : ICommandHandler<UpdateUserStatusCommand, Result>
 {
     /// <summary>
     /// Handles the UpdateUserStatusCommand
     /// </summary>
-    public partial async Task<Result> HandleAsync(UpdateUserStatusCommand command, CancellationToken cancellationToken)
+    public async Task<Result> Handle(UpdateUserStatusCommand command, CancellationToken cancellationToken)
     {
         // Simulate updating user status
         await Task.Delay(50, cancellationToken);
@@ -59,14 +63,14 @@ public partial class UpdateUserStatusCommandHandler
 }
 
 /// <summary>
-/// Handler for GenerateReportCommand
+/// Handler for GenerateReportCommand - no partial class required!
 /// </summary>
-public partial class GenerateReportCommandHandler
+public class GenerateReportCommandHandler : ICommandHandler<GenerateReportCommand, Result<string>>
 {
     /// <summary>
     /// Handles the GenerateReportCommand
     /// </summary>
-    public partial async Task<Result<string>> HandleAsync(GenerateReportCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(GenerateReportCommand command, CancellationToken cancellationToken)
     {
         // Simulate report generation
         await Task.Delay(200, cancellationToken);

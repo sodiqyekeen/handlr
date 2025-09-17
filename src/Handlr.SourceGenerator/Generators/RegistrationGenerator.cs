@@ -29,6 +29,15 @@ public class RegistrationGenerator
     {
         try
         {
+            // Generate the enhanced dispatcher
+            var dispatcherCode = DispatcherTemplate.Generate(
+                commands,
+                queries,
+                includeDebugInfo);
+
+            // Add the generated dispatcher
+            context.AddSource("GeneratedHandlrDispatcher.g.cs", dispatcherCode);
+
             // Generate the registration code
             var registrationCode = RegistrationTemplate.Generate(
                 commands,
@@ -38,10 +47,7 @@ public class RegistrationGenerator
                 includeDebugInfo);
 
             // Add the generated source
-            context.AddSource("HandlrServiceRegistration.g.cs", registrationCode);
-
-            // Generate additional utility classes
-            GenerateHandlerDispatcher(context, includeDebugInfo);
+            context.AddSource("GeneratedHandlrServiceRegistration.g.cs", registrationCode);
         }
         catch (System.Exception ex)
         {
@@ -54,14 +60,5 @@ public class RegistrationGenerator
 
             context.ReportDiagnostic(diagnostic);
         }
-    }
-
-    private static void GenerateHandlerDispatcher(
-        SourceProductionContext context,
-        bool includeDebugInfo)
-    {
-        // Use the template to generate the dispatcher
-        var dispatcherCode = DispatcherTemplate.Generate(includeDebugInfo);
-        context.AddSource("HandlrDispatcher.g.cs", dispatcherCode);
     }
 }

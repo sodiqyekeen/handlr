@@ -11,7 +11,7 @@
 [![Security Scan](https://github.com/sodiqyekeen/handlr/workflows/Security%20Scan/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
 [![Documentation](https://github.com/sodiqyekeen/handlr/workflows/Documentation/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/docs.yml)
 
-A lightweight CQRS (Command Query Responsibility Segregation) framework for .NET that provides the infrastructure for building scalable applications with automatic code generation and extensible pipeline behavior support.
+A high-performance CQRS (Command Query Responsibility Segregation) framework for .NET that combines switch expression-based dispatching with powerful pipeline behaviors. Built for developer productivity with automatic code generation and zero boilerplate.
 
 ## 📦 What's Included
 
@@ -22,9 +22,10 @@ A lightweight CQRS (Command Query Responsibility Segregation) framework for .NET
 - 🏷️ **Marker Interfaces**: For opt-in behavior patterns (e.g., `IValidatable`, `ICacheable`)
 
 ### Source Generator (`Handlr.SourceGenerator`)
+- 🚀 **Switch Expression Dispatcher**: High-performance compile-time routing
 - 🤖 **Automatic Registration**: Discovers and registers all handlers
-- 🔧 **Boilerplate Generation**: Eliminates manual configuration
-- ⚡ **Compile-time Safety**: Type-safe handler discovery
+- 🔧 **Zero Boilerplate**: No partial classes, just implement interfaces
+- ⚡ **Compile-time Safety**: Type-safe handler discovery with IntelliSense
 
 ### Samples & Examples
 - 📚 **Implementation Patterns**: Real-world examples of pipeline behaviors
@@ -33,12 +34,14 @@ A lightweight CQRS (Command Query Responsibility Segregation) framework for .NET
 
 ## 🚀 Features
 
-- **Source Generator Powered**: Automatic discovery and registration of commands, queries, and handlers
-- **Pipeline Behavior Support**: Infrastructure and examples for implementing cross-cutting concerns
-- **Type-Safe**: Strong typing with compile-time validation
-- **Flexible Results**: Support for any return type including `Result<T>` pattern
-- **Dependency Injection Ready**: Built for modern .NET DI containers
-- **Example-Driven**: Rich examples and templates for rapid development
+- **⚡ High Performance**: Switch expression-based dispatcher eliminates reflection overhead
+- **🎯 Developer Friendly**: Normal classes implementing standard interfaces - no partial classes!
+- **🔧 Source Generator Powered**: Automatic discovery and registration of commands, queries, and handlers
+- **🔄 Pipeline Behavior Support**: Infrastructure and examples for implementing cross-cutting concerns
+- **🛡️ Type-Safe**: Strong typing with compile-time validation and IntelliSense support
+- **📋 Flexible Results**: Support for any return type including `Result<T>` pattern
+- **🏗️ Dependency Injection Ready**: Built for modern .NET DI containers
+- **📚 Example-Driven**: Rich examples and templates for rapid development
 
 ## 📋 Quick Start
 
@@ -50,29 +53,32 @@ A lightweight CQRS (Command Query Responsibility Segregation) framework for .NET
 
 ### 2. Define Commands and Queries
 ```csharp
-// Command
-public record CreateUserCommand : ICommand<Result<User>>
+// Command - inherits from BaseCommand<T> for return type
+public record CreateUserCommand : BaseCommand<Result<User>>
 {
     public string Name { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
-    public string? CorrelationId { get; init; } = Guid.NewGuid().ToString();
-    public IDictionary<string, object>? Metadata { get; init; } = new Dictionary<string, object>();
 }
 
-// Query
-public record GetUserQuery : IQuery<Result<User>>
+// Query - inherits from BaseQuery<T> for return type  
+public record GetUserQuery : BaseQuery<Result<User>>
 {
     public int UserId { get; init; }
-    public string? CorrelationId { get; init; } = Guid.NewGuid().ToString();
-    public IDictionary<string, object>? Metadata { get; init; } = new Dictionary<string, object>();
+}
+
+// Command without return value - inherits from BaseCommand
+public record UpdateUserStatusCommand : BaseCommand
+{
+    public int UserId { get; init; }
+    public string Status { get; init; } = string.Empty;
 }
 ```
 
-### 3. Implement Handlers (Partial Classes)
+### 3. Implement Handlers (Normal Classes)
 ```csharp
-public partial class CreateUserCommandHandler
+public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<User>>
 {
-    public partial async Task<Result<User>> HandleAsync(CreateUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result<User>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
         // Your business logic here
         var user = new User(command.Name, command.Email);
@@ -83,11 +89,23 @@ public partial class CreateUserCommandHandler
 
 ### 4. Register and Use
 ```csharp
-// The source generator automatically creates registration extensions
+// The source generator automatically creates a high-performance dispatcher
 services.AddHandlr();
 
-// Send commands and queries
-var result = await handler.Send(new CreateUserCommand { Name = "John", Email = "john@example.com" });
+// Inject IHandlrDispatcher for sending commands and queries
+public class MyController
+{
+    private readonly IHandlrDispatcher _dispatcher;
+    
+    public MyController(IHandlrDispatcher dispatcher) => _dispatcher = dispatcher;
+    
+    public async Task<IActionResult> CreateUser(CreateUserRequest request)
+    {
+        var command = new CreateUserCommand { Name = request.Name, Email = request.Email };
+        var result = await _dispatcher.SendAsync(command);
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
+}
 ```
 
 ## 🎯 Pipeline Behavior Examples
@@ -109,7 +127,7 @@ The framework provides the infrastructure for pipeline behaviors and includes co
 
 ### Example: Command with Multiple Behaviors
 ```csharp
-public record CreateOrderCommand : ICommand<Result<Order>>, IValidatable, IRequireAuthorization, IMetricsEnabled
+public record CreateOrderCommand : BaseCommand<Result<Order>>, IValidatable, IRequireAuthorization, IMetricsEnabled
 {
     public string ProductId { get; init; } = string.Empty;
     public int Quantity { get; init; }
@@ -135,10 +153,6 @@ public record CreateOrderCommand : ICommand<Result<Order>>, IValidatable, IRequi
         { "product_id", ProductId },
         { "quantity", Quantity.ToString() }
     };
-    
-    // Required ICommand properties
-    public string? CorrelationId { get; init; } = Guid.NewGuid().ToString();
-    public IDictionary<string, object>? Metadata { get; init; } = new Dictionary<string, object>();
 }
 ```
 

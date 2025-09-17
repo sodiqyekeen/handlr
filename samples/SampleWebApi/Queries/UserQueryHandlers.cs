@@ -1,17 +1,22 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Results;
 using SampleWebApi.Services;
 
 namespace SampleWebApi.Queries;
 
 /// <summary>
-/// Handler for GetUserByIdQuery
+/// Handler for GetUserByIdQuery - no partial class required!
 /// </summary>
-public partial class GetUserByIdQueryHandler
+public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, Result<UserDto>>
 {
     /// <summary>
     /// Handles the GetUserByIdQuery
     /// </summary>
-    public partial async Task<Result<UserDto>> HandleAsync(GetUserByIdQuery query, CancellationToken cancellationToken)
+    public async Task<Result<UserDto>> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
     {
         // Simulate database lookup
         await Task.Delay(50, cancellationToken);
@@ -35,14 +40,14 @@ public partial class GetUserByIdQueryHandler
 }
 
 /// <summary>
-/// Handler for GetUsersQuery
+/// Handler for GetUsersQuery - no partial class required!
 /// </summary>
-public partial class GetUsersQueryHandler
+public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<List<UserDto>>>
 {
     /// <summary>
     /// Handles the GetUsersQuery
     /// </summary>
-    public partial async Task<Result<List<UserDto>>> HandleAsync(GetUsersQuery query, CancellationToken cancellationToken)
+    public async Task<Result<List<UserDto>>> Handle(GetUsersQuery query, CancellationToken cancellationToken)
     {
         // Simulate database query
         await Task.Delay(100, cancellationToken);

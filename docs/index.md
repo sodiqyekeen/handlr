@@ -4,16 +4,16 @@
 
 # Handlr CQRS Framework Documentation
 
-Welcome to the comprehensive documentation for the Handlr CQRS Framework - a modern, source generator-powered CQRS implementation for .NET 9.0.
+Welcome to the comprehensive documentation for the Handlr CQRS Framework - a high-performance, developer-friendly CQRS implementation for .NET with switch expression-based dispatching.
 
 ## 🚀 Quick Start
 
-Get started with Handlr in minutes:
+Get started with the Handlr framework in minutes:
 
-1. **Install the packages**
-2. **Define your commands and queries**  
-3. **Implement handlers**
-4. **Register and use**
+1. **Install the packages** - Core abstractions and source generator
+2. **Define your commands and queries** - Use `BaseCommand<T>` and `BaseQuery<T>` 
+3. **Implement handlers** - Normal classes implementing `ICommandHandler<T,R>` or `IQueryHandler<T,R>`
+4. **Register and use** - Automatic discovery with high-performance dispatcher
 
 ## 📚 Documentation Sections
 

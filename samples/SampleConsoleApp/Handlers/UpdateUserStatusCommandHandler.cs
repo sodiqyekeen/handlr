@@ -1,18 +1,20 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Commands;
 using SampleConsoleApp.Commands;
 
 namespace SampleConsoleApp.Commands;
 
 /// <summary>
-/// User implementation of UpdateUserStatusCommand handler
+/// Handler for UpdateUserStatusCommand - no partial class required!
 /// </summary>
-public partial class UpdateUserStatusCommandHandler
+public class UpdateUserStatusCommandHandler : ICommandHandler<UpdateUserStatusCommand>
 {
     /// <summary>
     /// Handles the UpdateUserStatusCommand
     /// </summary>
-    public partial async Task HandleAsync(UpdateUserStatusCommand command, CancellationToken cancellationToken)
+    public async Task Handle(UpdateUserStatusCommand command, CancellationToken cancellationToken)
     {
         // Simulate updating user status
         await Task.Delay(150, cancellationToken);

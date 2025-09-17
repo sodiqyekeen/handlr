@@ -4,11 +4,12 @@ This sample demonstrates how to use the Handlr CQRS framework with ASP.NET Core 
 
 ## 🚀 Features
 
-- **Minimal APIs**: Clean, concise endpoint definitions
-- **CQRS Pattern**: Separate commands and queries
-- **Pipeline Behaviors**: Logging, validation, and metrics
-- **Result Pattern**: Consistent error handling
-- **Source Generator**: Automatic handler registration
+- **⚡ High Performance**: Switch expression-based dispatcher eliminates reflection overhead
+- **🎯 Minimal APIs**: Clean, concise endpoint definitions
+- **🏗️ CQRS Pattern**: Separate commands and queries with normal class handlers
+- **🔄 Pipeline Behaviors**: Logging, validation, and metrics
+- **📋 Result Pattern**: Consistent error handling
+- **🤖 Source Generator**: Automatic handler discovery and registration
 
 ## 🏗️ Architecture
 
@@ -120,18 +121,21 @@ METRIC: CreateUserCommand executed in 45ms [Success]
 
 ## 🎯 Key Benefits
 
-- **Clean Architecture**: Clear separation between commands and queries
-- **Global Behaviors**: Cross-cutting concerns applied automatically
-- **Type Safety**: Compile-time guarantees with source generation
-- **Performance**: Minimal overhead with direct method calls
-- **Testable**: Easy to unit test handlers in isolation
+- **⚡ Superior Performance**: Switch expressions vs reflection for maximum speed
+- **🏗️ Clean Architecture**: Clear separation between commands and queries
+- **🌍 Global Behaviors**: Cross-cutting concerns applied automatically
+- **🛡️ Type Safety**: Compile-time guarantees with source generation
+- **🚀 Zero Overhead**: Direct method calls with no runtime reflection
+- **🧪 Testable**: Easy to unit test handlers in isolation
+- **👨‍💻 Developer Friendly**: Normal classes implementing standard interfaces
 
 ## 🔍 Source Generator
 
 The Handlr source generator automatically:
-- Discovers commands and queries
-- Generates handler interfaces
-- Registers services in DI container
-- Creates pipeline execution logic
+- **🚀 Generates high-performance dispatcher** using switch expressions
+- **🔍 Discovers commands and queries** with compile-time type safety
+- **🔗 Creates handler registrations** for dependency injection
+- **⚡ Eliminates reflection overhead** with direct method calls
+- **🧠 Provides IntelliSense support** for better developer experience
 
-No manual registration required! Just implement your handlers and they're automatically discovered.
+No manual registration required! Just implement normal classes with `ICommandHandler<T,R>` or `IQueryHandler<T,R>` interfaces and they're automatically discovered and optimized.

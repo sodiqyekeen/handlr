@@ -1,19 +1,20 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Results;
 using SampleConsoleApp.Commands;
 
 namespace SampleConsoleApp.Commands;
 
 /// <summary>
-/// User implementation of CreateUserCommand handler
+/// Handler for CreateUserCommand - no partial class required!
 /// </summary>
-public partial class CreateUserCommandHandler
+public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Result<int>>
 {
     /// <summary>
     /// Handles the CreateUserCommand
     /// </summary>
-    public partial async Task<Result<int>> HandleAsync(CreateUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
         // Simulate creating a user
         await Task.Delay(200, cancellationToken);

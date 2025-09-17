@@ -1,21 +1,23 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Results;
 using SampleConsoleApp.Queries;
 
 namespace SampleConsoleApp.Queries;
 
 /// <summary>
-/// User implementation of GetUsersQuery handler
+/// Handler for GetUsersQuery - no partial class required!
 /// </summary>
-public partial class GetUsersQueryHandler
+public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<List<UserDto>>>
 {
     /// <summary>
     /// Handles the GetUsersQuery
     /// </summary>
-    public partial async Task<Result<List<UserDto>>> HandleAsync(GetUsersQuery query, CancellationToken cancellationToken)
+    public async Task<Result<List<UserDto>>> Handle(GetUsersQuery query, CancellationToken cancellationToken)
     {
         // Simulate database query
         await Task.Delay(200, cancellationToken);

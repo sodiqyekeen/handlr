@@ -1,19 +1,21 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Results;
 using SampleConsoleApp.Commands;
 
 namespace SampleConsoleApp.Commands;
 
 /// <summary>
-/// User implementation of GenerateReportCommand handler
+/// Handler for GenerateReportCommand - no partial class required!
 /// </summary>
-public partial class GenerateReportCommandHandler
+public class GenerateReportCommandHandler : ICommandHandler<GenerateReportCommand, Result<string>>
 {
     /// <summary>
     /// Handles the GenerateReportCommand
     /// </summary>
-    public partial async Task<Result<string>> HandleAsync(GenerateReportCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(GenerateReportCommand command, CancellationToken cancellationToken)
     {
         // Simulate report generation
         await Task.Delay(500, cancellationToken);

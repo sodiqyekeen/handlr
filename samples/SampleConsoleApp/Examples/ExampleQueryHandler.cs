@@ -1,19 +1,19 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Results;
 
 namespace SampleConsoleApp.Examples;
 
 /// <summary>
-/// Example handler for ExampleQuery - shows how the source generator will work
-/// This is the user implementation part of the partial class
+/// Example handler for ExampleQuery - no partial class required!
 /// </summary>
-public partial class ExampleQueryHandler
+public class ExampleQueryHandler : IQueryHandler<ExampleQuery, Result<string>>
 {
     /// <summary>
-    /// Implements the partial method defined by the source generator
+    /// Handles the ExampleQuery
     /// </summary>
-    public partial async Task<Result<string>> HandleAsync(ExampleQuery query, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(ExampleQuery query, CancellationToken cancellationToken)
     {
         // Simulate some processing
         await Task.Delay(200, cancellationToken);
