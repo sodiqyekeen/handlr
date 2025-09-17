@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Handlr.Abstractions.Commands;
-using Handlr.Abstractions.Queries;
 using Handlr.Abstractions.Common;
+using Handlr.Abstractions.Queries;
 
 namespace Handlr.Abstractions.Extensions;
 

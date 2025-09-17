@@ -2,9 +2,9 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Handlr.Abstractions.Commands;
 using Handlr.Abstractions.Queries;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Handlr.Abstractions.Common;
 
