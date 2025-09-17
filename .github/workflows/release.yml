@@ -1,5 +1,6 @@
 name: Release
 
+# This workflow can be triggered manually or by pushing tags
 on:
   push:
     tags:
