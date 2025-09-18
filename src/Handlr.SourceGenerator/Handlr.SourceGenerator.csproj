@@ -12,7 +12,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <!-- Disable specific analyzer rules for development -->
-    <NoWarn>$(NoWarn);RS2008;RS2001;RS1032</NoWarn>
+    <NoWarn>$(NoWarn);RS2008;RS2001;RS1032;CS1591;RS2007;RS2003</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +22,12 @@
 
   <ItemGroup>
     <ProjectReference Include="../Handlr.Abstractions/Handlr.Abstractions.csproj" />
+  </ItemGroup>
+
+  <!-- Include the generator assembly in the analyzers folder for NuGet package -->
+  <ItemGroup>
+    <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true"
+      PackagePath="analyzers/dotnet/cs/$(AssemblyName).dll" Visible="false" />
   </ItemGroup>
 
 </Project>

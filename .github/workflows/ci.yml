@@ -58,7 +58,13 @@ jobs:
 
     - name: Test
       if: inputs.run_tests != false
-      run: dotnet test --no-build --configuration ${{ inputs.build_configuration || 'Release' }} --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+      run: dotnet test --no-build --configuration ${{ inputs.build_configuration || 'Release' }} --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage --settings coverlet.runsettings
+
+    - name: Generate Coverage Report
+      if: inputs.run_tests != false
+      run: |
+        dotnet tool install --global dotnet-reportgenerator-globaltool
+        reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage/report" -reporttypes:"Html;Cobertura;JsonSummary" -verbosity:Info
 
     - name: Upload coverage to Codecov
       if: inputs.run_tests != false
@@ -67,6 +73,8 @@ jobs:
         directory: ./coverage
         fail_ci_if_error: false
         verbose: true
+        flags: unittests
+        name: codecov-umbrella
 
   build-samples:
     name: Build Samples
@@ -161,6 +169,8 @@ jobs:
       run: |
         dotnet pack src/Handlr.Abstractions --configuration ${{ inputs.build_configuration || 'Release' }} --no-build --output ./packages
         dotnet pack src/Handlr.SourceGenerator --configuration ${{ inputs.build_configuration || 'Release' }} --no-build --output ./packages
+        dotnet pack src/Handlr.Extensions.FluentValidation --configuration ${{ inputs.build_configuration || 'Release' }} --no-build --output ./packages
+        dotnet pack src/Handlr.Extensions.DataAnnotations --configuration ${{ inputs.build_configuration || 'Release' }} --no-build --output ./packages
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4

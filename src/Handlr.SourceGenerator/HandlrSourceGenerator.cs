@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using Handlr.SourceGenerator.Diagnostics;
-using Handlr.SourceGenerator.Generators;
-using Handlr.SourceGenerator.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,383 +9,407 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Handlr.SourceGenerator;
 
-/// <summary>
-/// Incremental source generator for Handlr CQRS framework.
-/// Generates handlers, pipeline behaviors, and service registrations.
-/// </summary>
 [Generator]
-public class HandlrSourceGenerator : IIncrementalGenerator
+public class HandlrSourceGenerator : ISourceGenerator
 {
-    /// <summary>
-    /// Initializes the incremental generator.
-    /// </summary>
-    /// <param name="context">The initialization context</param>
-    public void Initialize(IncrementalGeneratorInitializationContext context)
+    public void Initialize(GeneratorInitializationContext context)
     {
-        // Add debug support - enable with HANDLR_DEBUG compilation symbol
-#if DEBUG || HANDLR_DEBUG
-        System.Diagnostics.Debugger.Launch();
-#endif
-
-        // Create a syntax provider that finds CQRS elements
-        var cqrsElements = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: static (s, _) => IsCandidateForGeneration(s),
-                transform: static (ctx, _) => GetCqrsElements(ctx))
-            .Where(static elements => elements != null)
-            .Select(static (elements, _) => elements!);
-
-        // Combine with compilation and generate sources
-        var compilationAndElements = context.CompilationProvider.Combine(cqrsElements.Collect());
-
-        context.RegisterSourceOutput(compilationAndElements, static (ctx, source) => Execute(ctx, source.Left, source.Right));
+        context.RegisterForSyntaxNotifications(() => new HandlrSyntaxReceiver());
     }
 
-    private static bool IsCandidateForGeneration(SyntaxNode node)
+    public void Execute(GeneratorExecutionContext context)
     {
-        // Look for class or record declarations that might implement CQRS interfaces
-        if (node is ClassDeclarationSyntax classDeclaration)
-        {
-            // Check if class has any base types (interfaces or base classes)
-            return classDeclaration.BaseList?.Types.Count > 0;
-        }
+        if (context.SyntaxContextReceiver is not HandlrSyntaxReceiver receiver)
+            return;
 
-        if (node is RecordDeclarationSyntax recordDeclaration)
-        {
-            // Check if record has any base types (interfaces or base classes)
-            return recordDeclaration.BaseList?.Types.Count > 0;
-        }
+        var dispatcherCode = GenerateDispatcherImplementation(receiver);
+        context.AddSource("GeneratedHandlrDispatcher.g.cs", SourceText.From(dispatcherCode, Encoding.UTF8));
 
-        return false;
+        var registrationCode = GenerateRegistrationImplementation(receiver);
+        context.AddSource("GeneratedHandlrRegistration.g.cs", SourceText.From(registrationCode, Encoding.UTF8));
     }
 
-    private static CqrsElements? GetCqrsElements(GeneratorSyntaxContext context)
+    private static string GenerateDispatcherImplementation(HandlrSyntaxReceiver receiver)
     {
-        INamedTypeSymbol? classSymbol = null;
-        Location? location = null;
+        var builder = new StringBuilder();
+        builder.AppendLine("#nullable enable");
+        builder.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        builder.AppendLine("using Handlr.Abstractions.Common;");
+        builder.AppendLine("using Handlr.Abstractions.Commands;");
+        builder.AppendLine("using Handlr.Abstractions.Queries;");
+        builder.AppendLine("using Handlr.Abstractions.Pipelines;");
+        builder.AppendLine("using System;");
+        builder.AppendLine("using System.Collections.Generic;");
+        builder.AppendLine("using System.Linq;");
+        builder.AppendLine("using System.Threading;");
+        builder.AppendLine("using System.Threading.Tasks;");
+        builder.AppendLine();
+        builder.AppendLine("namespace Handlr.Generated;");
+        builder.AppendLine();
+        builder.AppendLine("/// <summary>");
+        builder.AppendLine("/// High-performance generated dispatcher with zero reflection and full pipeline behavior support.");
+        builder.AppendLine("/// This implementation combines Click CQRS patterns with Handlr's powerful pipeline behaviors.");
+        builder.AppendLine("/// </summary>");
+        builder.AppendLine("public class GeneratedHandlrDispatcher : IHandlrDispatcher");
+        builder.AppendLine("{");
+        builder.AppendLine("    private readonly IServiceProvider _serviceProvider;");
+        builder.AppendLine();
+        builder.AppendLine("    public GeneratedHandlrDispatcher(IServiceProvider serviceProvider)");
+        builder.AppendLine("    {");
+        builder.AppendLine("        _serviceProvider = serviceProvider;");
+        builder.AppendLine("    }");
 
-        if (context.Node is ClassDeclarationSyntax classDeclaration)
-        {
-            var semanticModel = context.SemanticModel;
-            classSymbol = semanticModel.GetDeclaredSymbol(classDeclaration) as INamedTypeSymbol;
-            location = classDeclaration.Identifier.GetLocation();
-        }
-        else if (context.Node is RecordDeclarationSyntax recordDeclaration)
-        {
-            var semanticModel = context.SemanticModel;
-            classSymbol = semanticModel.GetDeclaredSymbol(recordDeclaration) as INamedTypeSymbol;
-            location = recordDeclaration.Identifier.GetLocation();
-        }
+        // Generate pipeline-aware methods
+        GeneratePipelineAwareSendCommandMethod(builder, receiver);
+        GeneratePipelineAwareSendCommandWithResultMethod(builder, receiver);
+        GeneratePipelineAwareSendQueryMethod(builder, receiver);
 
-        if (classSymbol == null || classSymbol.IsAbstract || location == null)
-            return null;
+        // Generate pipeline execution helper
+        GeneratePipelineExecutionHelper(builder);
 
-        // Debug: Generate a file for each class being analyzed
-        var debugSource = $@"
-// Debug info for class {classSymbol.Name}
-// Interfaces: {string.Join(", ", classSymbol.AllInterfaces.Select(i => i.ToDisplayString()))}
-// Full name: {classSymbol.ToDisplayString()}
-";
-        // Note: We can't add source here because we don't have SourceProductionContext
-
-        var elements = new CqrsElements();
-        var interfaces = classSymbol.AllInterfaces;
-
-        // First, check if this is a command or query by looking for the most specific interface
-        var commandInterfaces = interfaces.Where(i =>
-            i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Commands.ICommand" ||
-            i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Commands.ICommand<TResult>").ToList();
-
-        var queryInterfaces = interfaces.Where(i =>
-            i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Queries.IQuery<TResult>").ToList();
-
-        // Process commands - prioritize generic interface over base interface
-        if (commandInterfaces.Any())
-        {
-            var commandInterface = commandInterfaces
-                .FirstOrDefault(i => i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Commands.ICommand<TResult>") ??
-                commandInterfaces.First();
-
-            ITypeSymbol? resultType = null;
-            if (commandInterface.TypeArguments.Length == 1)
-                resultType = commandInterface.TypeArguments[0];
-
-            elements.Commands.Add(new CommandInfo(classSymbol, resultType, location));
-        }
-        // Process queries
-        else if (queryInterfaces.Any())
-        {
-            var queryInterface = queryInterfaces.First();
-            if (queryInterface.TypeArguments.Length == 1)
-            {
-                var resultType = queryInterface.TypeArguments[0];
-                elements.Queries.Add(new QueryInfo(classSymbol, resultType, location));
-            }
-        }
-
-        // Process other interface types
-        foreach (var @interface in interfaces)
-        {
-            var interfaceFullName = @interface.OriginalDefinition.ToDisplayString();
-
-            // Check for pipeline behaviors - use OriginalDefinition
-            if (interfaceFullName == "Handlr.Abstractions.Pipelines.IPipelineBehavior<TRequest, TResult>" &&
-                     @interface.TypeArguments.Length == 2)
-            {
-                var requestType = @interface.TypeArguments[0];
-                var resultType = @interface.TypeArguments[1];
-
-                var isConditional = interfaces.Any(i =>
-                    i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Pipelines.IConditionalBehavior<TRequest, TResult>");
-
-                elements.Behaviors.Add(new PipelineBehaviorInfo(classSymbol, requestType, resultType, isConditional, location));
-            }
-            // Check for custom handlers - use OriginalDefinition
-            else if (interfaceFullName == "Handlr.Abstractions.Commands.ICommandHandler<TCommand>" ||
-                     interfaceFullName == "Handlr.Abstractions.Commands.ICommandHandler<TCommand, TResult>" ||
-                     interfaceFullName == "Handlr.Abstractions.Queries.IQueryHandler<TQuery, TResult>")
-            {
-                var isCommandHandler = interfaceFullName.Contains("Command");
-
-                if (@interface.TypeArguments.Length == 1)
-                {
-                    var requestType = @interface.TypeArguments[0];
-                    elements.CustomHandlers.Add(new HandlerInfo(classSymbol, requestType, null, isCommandHandler, location));
-                }
-                else if (@interface.TypeArguments.Length == 2)
-                {
-                    var requestType = @interface.TypeArguments[0];
-                    var resultType = @interface.TypeArguments[1];
-                    elements.CustomHandlers.Add(new HandlerInfo(classSymbol, requestType, resultType, isCommandHandler, location));
-                }
-            }
-        }
-
-        return elements.HasAnyElements ? elements : null;
+        builder.AppendLine("}");
+        return builder.ToString();
     }
 
-    private static void Execute(SourceProductionContext context, Compilation compilation, ImmutableArray<CqrsElements> allElements)
+    private static void GeneratePipelineAwareSendCommandMethod(StringBuilder builder, HandlrSyntaxReceiver receiver)
     {
-        try
+        builder.AppendLine("    public async Task SendAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : ICommand");
+        builder.AppendLine("    {");
+        builder.AppendLine("        if (command == null) throw new ArgumentNullException(nameof(command));");
+        builder.AppendLine();
+        builder.AppendLine("        // Build and execute pipeline for commands without results");
+        builder.AppendLine("        await ExecutePipeline<TCommand, object>(command, async () => {");
+
+        if (receiver.Commands.Any())
         {
-            // Combine all discovered elements
-            var combinedElements = CombineElements(allElements);
+            builder.AppendLine("            await (command switch");
+            builder.AppendLine("            {");
 
-            // Generate a debug file to confirm source generator is running
-            var debugClasses = allElements
-                .SelectMany(e => e.Commands.Select(c => $"Command: {c.Name}"))
-                .Concat(allElements.SelectMany(e => e.Queries.Select(q => $"Query: {q.Name}")))
-                .Concat(allElements.SelectMany(e => e.Behaviors.Select(b => $"Behavior: {b.Name}")))
-                .ToList();
-
-            var debugSource = $@"
-namespace Handlr.Generated
-{{
-    public static class DebugInfo
-    {{
-        public static string GeneratedAt => ""{DateTime.Now:yyyy-MM-dd HH:mm:ss}"";
-        public static int CommandsFound => {combinedElements.Commands.Count()};
-        public static int QueriesFound => {combinedElements.Queries.Count()};
-        public static int BehaviorsFound => {combinedElements.Behaviors.Count()};
-        public static int CustomHandlersFound => {combinedElements.CustomHandlers.Count()};
-        public static int ElementGroups => {allElements.Length};
-        public static string[] FoundClasses => new string[] {{ {string.Join(", ", debugClasses.Select(c => $"\"{c}\""))} }};
-    }}
-}}";
-            context.AddSource("DebugInfo.g.cs", SourceText.From(debugSource, Encoding.UTF8));
-
-            // Generate interface debug info to understand what interfaces are being checked
-            var interfaceDebugSource = GenerateInterfaceDebugInfo(compilation);
-            context.AddSource("InterfaceDebugInfo.g.cs", SourceText.From(interfaceDebugSource, Encoding.UTF8));
-
-            // Determine if debug info should be included
-            var includeDebugInfo = ShouldIncludeDebugInfo(compilation);
-
-            // Validate for duplicate handlers
-            ValidateForDuplicates(context, combinedElements);
-
-            // Generate service registrations with enhanced dispatcher
-            RegistrationGenerator.Generate(
-                context,
-                combinedElements.Commands,
-                combinedElements.Queries,
-                combinedElements.Behaviors,
-                combinedElements.CustomHandlers,
-                includeDebugInfo);
-
-            // Report summary information if debug is enabled
-            if (includeDebugInfo)
+            foreach (var command in receiver.Commands)
             {
-                ReportGenerationSummary(context, combinedElements);
-            }
-        }
-        catch (System.Exception ex)
-        {
-            // Report critical generation error
-            var diagnostic = Diagnostic.Create(
-                DiagnosticDescriptors.GeneratedCodeFormattingIssue,
-                Location.None,
-                "HandlrSourceGenerator",
-                $"Critical error during generation: {ex.Message}");
-
-            context.ReportDiagnostic(diagnostic);
-        }
-    }
-
-    private static string GenerateInterfaceDebugInfo(Compilation compilation)
-    {
-        var classInfo = new List<string>();
-
-        foreach (var syntaxTree in compilation.SyntaxTrees)
-        {
-            var semanticModel = compilation.GetSemanticModel(syntaxTree);
-            var classes = syntaxTree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
-            var records = syntaxTree.GetRoot().DescendantNodes().OfType<RecordDeclarationSyntax>();
-
-            // Process classes
-            foreach (var classDecl in classes)
-            {
-                var classSymbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-                if (classSymbol == null) continue;
-
-                // Only include classes from our sample project
-                if (!classSymbol.ContainingNamespace.ToDisplayString().StartsWith("SampleConsoleApp"))
-                    continue;
-
-                ProcessTypeForDebug(classSymbol, classInfo);
+                var fullName = command.ToDisplayString();
+                builder.AppendLine($"                {fullName} cmd => HandleCommand_{command.Name}(cmd, cancellationToken),");
             }
 
-            // Process records
-            foreach (var recordDecl in records)
-            {
-                var recordSymbol = semanticModel.GetDeclaredSymbol(recordDecl) as INamedTypeSymbol;
-                if (recordSymbol == null) continue;
-
-                // Only include records from our sample project
-                if (!recordSymbol.ContainingNamespace.ToDisplayString().StartsWith("SampleConsoleApp"))
-                    continue;
-
-                ProcessTypeForDebug(recordSymbol, classInfo);
-            }
-        }
-
-        var classDebugInfo = string.Join("\", \"", classInfo);
-
-        return $@"
-namespace Handlr.Generated
-{{
-    public static class InterfaceDebugInfo
-    {{
-        public static string[] ClassInterfaces => new string[] {{ ""{classDebugInfo}"" }};
-    }}
-}}";
-    }
-
-    private static void ProcessTypeForDebug(INamedTypeSymbol typeSymbol, List<string> classInfo)
-    {
-        var interfaces = typeSymbol.AllInterfaces.Select(i => new
-        {
-            Name = i.ToDisplayString(),
-            OriginalDefinition = i.OriginalDefinition.ToDisplayString(),
-            TypeArguments = i.TypeArguments.Length
-        }).ToArray();
-
-        if (interfaces.Any())
-        {
-            var interfaceList = string.Join(", ", interfaces.Select(i => $"{i.OriginalDefinition}({i.TypeArguments})"));
-            classInfo.Add($"{typeSymbol.Name}: {interfaceList}");
-        }
-        else if (typeSymbol.BaseType != null && typeSymbol.BaseType.Name != "Object")
-        {
-            classInfo.Add($"{typeSymbol.Name}: BaseType: {typeSymbol.BaseType.ToDisplayString()}");
+            builder.AppendLine("                _ => throw new InvalidOperationException($\"Command type {command.GetType().Name} is not supported.\")");
+            builder.AppendLine("            });");
+            builder.AppendLine("            return null!; // Commands without results return null");
         }
         else
         {
-            classInfo.Add($"{typeSymbol.Name}: NO_INTERFACES_OR_BASE");
+            builder.AppendLine("            await Task.FromException(new InvalidOperationException($\"Command type {command.GetType().Name} is not supported.\"));");
+            builder.AppendLine("            return null!;");
+        }
+
+        builder.AppendLine("        }, cancellationToken);");
+        builder.AppendLine("    }");
+
+        // Generate individual command handlers
+        foreach (var command in receiver.Commands)
+        {
+            var fullName = command.ToDisplayString();
+            builder.AppendLine($@"    
+    private async Task HandleCommand_{command.Name}({fullName} command, CancellationToken cancellationToken)
+    {{
+        var handler = _serviceProvider.GetRequiredService<ICommandHandler<{fullName}>>();
+        await handler.Handle(command, cancellationToken);
+    }}");
         }
     }
 
-    private static CqrsElements CombineElements(ImmutableArray<CqrsElements> allElements)
+    private static void GeneratePipelineAwareSendCommandWithResultMethod(StringBuilder builder, HandlrSyntaxReceiver receiver)
     {
-        var combined = new CqrsElements();
+        builder.AppendLine("    public async Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken cancellationToken = default)");
+        builder.AppendLine("    {");
+        builder.AppendLine("        if (command == null) throw new ArgumentNullException(nameof(command));");
+        builder.AppendLine();
+        builder.AppendLine("        // Build and execute pipeline for commands with results");
+        builder.AppendLine("        return command switch");
+        builder.AppendLine("        {");
 
-        foreach (var elements in allElements)
+        if (receiver.CommandsWithResults.Any())
         {
-            combined.Commands.AddRange(elements.Commands);
-            combined.Queries.AddRange(elements.Queries);
-            combined.Behaviors.AddRange(elements.Behaviors);
-            combined.CustomHandlers.AddRange(elements.CustomHandlers);
-        }
-
-        return combined;
-    }
-
-    private static bool ShouldIncludeDebugInfo(Compilation compilation)
-    {
-        // Check for debug compilation symbols
-        return compilation.SyntaxTrees.Any(tree =>
-            tree.GetCompilationUnitRoot().GetFirstDirective(directive =>
-                directive is DefineDirectiveTriviaSyntax define &&
-                (define.Name.ValueText == "DEBUG" || define.Name.ValueText == "HANDLR_DEBUG")) != null);
-    }
-
-    private static void ValidateForDuplicates(SourceProductionContext context, CqrsElements elements)
-    {
-        // Check for duplicate command handlers
-        var commandGroups = elements.Commands.GroupBy(c => c.FullName);
-        foreach (var group in commandGroups.Where(g => g.Count() > 1))
-        {
-            foreach (var duplicate in group.Skip(1))
+            foreach (var command in receiver.CommandsWithResults)
             {
-                var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.DuplicateHandlerFound,
-                    duplicate.Location,
-                    duplicate.Name);
-
-                context.ReportDiagnostic(diagnostic);
+                var fullName = command.ToDisplayString();
+                var resultType = GetResultType(command);
+                builder.AppendLine($"            {fullName} cmd => (TResult)(object)await ExecutePipeline<{fullName}, {resultType}>(cmd, async () => await HandleCommandWithResult_{command.Name}(cmd, cancellationToken), cancellationToken),");
             }
-        }
 
-        // Check for duplicate query handlers
-        var queryGroups = elements.Queries.GroupBy(q => q.FullName);
-        foreach (var group in queryGroups.Where(g => g.Count() > 1))
+            builder.AppendLine("            _ => throw new InvalidOperationException($\"Command type {command.GetType().Name} is not supported.\")");
+        }
+        else
         {
-            foreach (var duplicate in group.Skip(1))
-            {
-                var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.DuplicateHandlerFound,
-                    duplicate.Location,
-                    duplicate.Name);
+            builder.AppendLine("            _ => throw new InvalidOperationException($\"Command type {command.GetType().Name} is not supported.\")");
+        }
 
-                context.ReportDiagnostic(diagnostic);
-            }
+        builder.AppendLine("        };");
+        builder.AppendLine("    }");
+
+        // Generate individual command handlers with results
+        foreach (var command in receiver.CommandsWithResults)
+        {
+            var fullName = command.ToDisplayString();
+            var resultType = GetResultType(command);
+            builder.AppendLine($@"    
+    private async Task<{resultType}> HandleCommandWithResult_{command.Name}({fullName} command, CancellationToken cancellationToken)
+    {{
+        var handler = _serviceProvider.GetRequiredService<ICommandHandler<{fullName}, {resultType}>>();
+        return await handler.Handle(command, cancellationToken);
+    }}");
         }
     }
 
-    private static void ReportGenerationSummary(SourceProductionContext context, CqrsElements elements)
+    private static void GeneratePipelineAwareSendQueryMethod(StringBuilder builder, HandlrSyntaxReceiver receiver)
     {
-        var summary = $"Generated: {elements.Commands.Count} commands, {elements.Queries.Count} queries, " +
-                     $"{elements.Behaviors.Count} behaviors, {elements.CustomHandlers.Count} custom handlers";
+        builder.AppendLine("    public async Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)");
+        builder.AppendLine("    {");
+        builder.AppendLine("        if (query == null) throw new ArgumentNullException(nameof(query));");
+        builder.AppendLine();
+        builder.AppendLine("        // Build and execute pipeline for queries");
+        builder.AppendLine("        return await ExecutePipeline<IQuery<TResult>, TResult>(query, async () => {");
 
-        var diagnostic = Diagnostic.Create(
-            DiagnosticDescriptors.GeneratedCodeFormattingIssue,
-            Location.None,
-            "HandlrSourceGenerator",
-            summary);
+        if (receiver.Queries.Any())
+        {
+            builder.AppendLine("            return query switch");
+            builder.AppendLine("            {");
 
-        context.ReportDiagnostic(diagnostic);
+            foreach (var query in receiver.Queries)
+            {
+                var fullName = query.ToDisplayString();
+                var resultType = GetResultType(query);
+                builder.AppendLine($"                {fullName} q => (TResult)(object)await HandleQuery_{query.Name}(q, cancellationToken),");
+            }
+
+            builder.AppendLine("                _ => throw new InvalidOperationException($\"Query type {query.GetType().Name} is not supported.\")");
+            builder.AppendLine("            };");
+        }
+        else
+        {
+            builder.AppendLine("            return await Task.FromException<TResult>(new InvalidOperationException($\"Query type {query.GetType().Name} is not supported.\"));");
+        }
+
+        builder.AppendLine("        }, cancellationToken);");
+        builder.AppendLine("    }");
+
+        // Generate individual query handlers
+        foreach (var query in receiver.Queries)
+        {
+            var fullName = query.ToDisplayString();
+            var resultType = GetResultType(query);
+            builder.AppendLine($@"    
+    private async Task<{resultType}> HandleQuery_{query.Name}({fullName} query, CancellationToken cancellationToken)
+    {{
+        var handler = _serviceProvider.GetRequiredService<IQueryHandler<{fullName}, {resultType}>>();
+        return await handler.Handle(query, cancellationToken);
+    }}");
+        }
     }
 
+    private static void GeneratePipelineExecutionHelper(StringBuilder builder)
+    {
+        builder.AppendLine(@"
     /// <summary>
-    /// Container for discovered CQRS elements.
+    /// Executes the pipeline behavior chain for the given request.
+    /// This method builds the pipeline chain and executes behaviors in order.
     /// </summary>
-    internal class CqrsElements
+    private async Task<TResult> ExecutePipeline<TRequest, TResult>(TRequest request, Func<Task<TResult>> handler, CancellationToken cancellationToken)
     {
-        public System.Collections.Generic.List<CommandInfo> Commands { get; } = new();
-        public System.Collections.Generic.List<QueryInfo> Queries { get; } = new();
-        public System.Collections.Generic.List<PipelineBehaviorInfo> Behaviors { get; } = new();
-        public System.Collections.Generic.List<HandlerInfo> CustomHandlers { get; } = new();
+        // Get all pipeline behaviors for this request/result type
+        // The DI container should resolve open generics to closed generics
+        var behaviors = _serviceProvider.GetServices<IPipelineBehavior<TRequest, TResult>>().ToArray();
+        
+        // Also try to get behaviors using reflection as fallback for open generic registrations
+        if (behaviors.Length == 0)
+        {
+            var pipelineBehaviorType = typeof(IPipelineBehavior<,>);
+            var closedGenericType = pipelineBehaviorType.MakeGenericType(typeof(TRequest), typeof(TResult));
+            behaviors = ((IEnumerable<IPipelineBehavior<TRequest, TResult>>)_serviceProvider.GetServices(closedGenericType)).ToArray();
+        }
+        
+        if (behaviors.Length == 0)
+        {
+            // No behaviors, execute handler directly
+            return await handler();
+        }
+        
+        // Build the pipeline chain from right to left (handler -> behavior N -> ... -> behavior 1)
+        RequestHandlerDelegate<TResult> pipeline = async () => await handler();
 
-        public bool HasAnyElements => Commands.Any() || Queries.Any() || Behaviors.Any() || CustomHandlers.Any();
+        // Wrap each behavior around the pipeline
+        for (int i = behaviors.Length - 1; i >= 0; i--)
+        {
+            var behavior = behaviors[i];
+            var currentPipeline = pipeline;
+            pipeline = async () => await behavior.Handle(request, currentPipeline, cancellationToken);
+        }
+
+        // Execute the complete pipeline
+        return await pipeline();
+    }");
+    }
+
+    private static string GenerateRegistrationImplementation(HandlrSyntaxReceiver receiver)
+    {
+        var builder = new StringBuilder();
+
+        // Generate the using statements
+        builder.AppendLine("#nullable enable");
+        builder.AppendLine("using System;");
+        builder.AppendLine("using System.Linq;");
+        builder.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        builder.AppendLine("using Handlr.Abstractions.Common;");
+        builder.AppendLine("using Handlr.Abstractions.Commands;");
+        builder.AppendLine("using Handlr.Abstractions.Queries;");
+        builder.AppendLine("using Handlr.Abstractions.Extensions;");
+        builder.AppendLine();
+
+        // Generate the namespace and class  
+        builder.AppendLine("namespace Handlr.Generated.Extensions;");
+        builder.AppendLine();
+        builder.AppendLine("/// <summary>");
+        builder.AppendLine("/// Auto-generated extension methods that provide optimized handler registration.");
+        builder.AppendLine("/// This extends the base AddHandlr method with source-generated handler discovery.");
+        builder.AppendLine("/// </summary>");
+        builder.AppendLine("public static class GeneratedHandlrServiceCollectionExtensions");
+        builder.AppendLine("{");
+
+        // Generate the TryAddGeneratedHandlers method
+        builder.AppendLine("    /// <summary>");
+        builder.AppendLine("    /// Registers all discovered handlers and replaces the basic dispatcher with the optimized one.");
+        builder.AppendLine("    /// This method is called automatically by AddHandlr() when source generation is enabled.");
+        builder.AppendLine("    /// </summary>");
+        builder.AppendLine("    /// <param name=\"services\">The service collection</param>");
+        builder.AppendLine("    /// <returns>The service collection for chaining</returns>");
+        builder.AppendLine("    public static IServiceCollection TryAddGeneratedHandlers(this IServiceCollection services)");
+        builder.AppendLine("    {");
+        builder.AppendLine("        // Replace the basic dispatcher with our optimized generated one");
+        builder.AppendLine("        // Remove any existing IHandlrDispatcher registration and add the generated one");
+        builder.AppendLine("        var existingDispatcher = services.FirstOrDefault(s => s.ServiceType == typeof(IHandlrDispatcher));");
+        builder.AppendLine("        if (existingDispatcher != null)");
+        builder.AppendLine("            services.Remove(existingDispatcher);");
+        builder.AppendLine("        services.AddScoped<IHandlrDispatcher, Handlr.Generated.GeneratedHandlrDispatcher>();");
+        builder.AppendLine();
+
+        // Register command handlers
+        foreach (var handler in receiver.CommandHandlers)
+        {
+            var handlerInterface = handler.AllInterfaces.First(i =>
+                i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Commands.ICommandHandler<TCommand>");
+            var commandType = handlerInterface.TypeArguments[0];
+            builder.AppendLine($"        services.AddScoped<ICommandHandler<{commandType.ToDisplayString()}>, {handler.ToDisplayString()}>();");
+        }
+
+        // Register command handlers with results
+        foreach (var handler in receiver.CommandWithResultHandlers)
+        {
+            var handlerInterface = handler.AllInterfaces.First(i =>
+                i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Commands.ICommandHandler<TCommand, TResult>");
+            var commandType = handlerInterface.TypeArguments[0];
+            var resultType = handlerInterface.TypeArguments[1];
+            builder.AppendLine($"        services.AddScoped<ICommandHandler<{commandType.ToDisplayString()}, {resultType.ToDisplayString()}>, {handler.ToDisplayString()}>();");
+        }
+
+        // Register query handlers
+        foreach (var handler in receiver.QueryHandlers)
+        {
+            var handlerInterface = handler.AllInterfaces.First(i =>
+                i.OriginalDefinition.ToDisplayString() == "Handlr.Abstractions.Queries.IQueryHandler<TQuery, TResult>");
+            var queryType = handlerInterface.TypeArguments[0];
+            var resultType = handlerInterface.TypeArguments[1];
+            builder.AppendLine($"        services.AddScoped<IQueryHandler<{queryType.ToDisplayString()}, {resultType.ToDisplayString()}>, {handler.ToDisplayString()}>();");
+        }
+
+        // Register FluentValidation validators (auto-discovered)
+        foreach (var validator in receiver.Validators)
+        {
+            var validatorInterface = validator.AllInterfaces.First(i =>
+                i.OriginalDefinition.ToDisplayString() == "FluentValidation.IValidator<T>");
+            var validatedType = validatorInterface.TypeArguments[0];
+            builder.AppendLine($"        services.AddScoped<FluentValidation.IValidator<{validatedType.ToDisplayString()}>, {validator.ToDisplayString()}>();");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("        return services;");
+        builder.AppendLine("    }");
+        builder.AppendLine("}");
+
+        return builder.ToString();
+    }
+
+    private static string GetResultType(ITypeSymbol typeSymbol)
+    {
+        var commandInterface = typeSymbol.AllInterfaces
+            .FirstOrDefault(i => i.Name == "ICommand" && i.TypeArguments.Length == 1);
+
+        if (commandInterface != null)
+            return commandInterface.TypeArguments[0].ToDisplayString();
+
+        var queryInterface = typeSymbol.AllInterfaces
+            .FirstOrDefault(i => i.Name == "IQuery" && i.TypeArguments.Length == 1);
+
+        if (queryInterface != null)
+            return queryInterface.TypeArguments[0].ToDisplayString();
+
+        return "object";
+    }
+}
+
+internal sealed class HandlrSyntaxReceiver : ISyntaxContextReceiver
+{
+    public List<ITypeSymbol> Commands { get; } = new();
+    public List<ITypeSymbol> CommandsWithResults { get; } = new();
+    public List<ITypeSymbol> Queries { get; } = new();
+    public List<ITypeSymbol> CommandHandlers { get; } = new();
+    public List<ITypeSymbol> CommandWithResultHandlers { get; } = new();
+    public List<ITypeSymbol> QueryHandlers { get; } = new();
+    public List<ITypeSymbol> Validators { get; } = new();
+
+    public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+    {
+        if (context.Node is not (RecordDeclarationSyntax or ClassDeclarationSyntax))
+            return;
+
+        if (context.SemanticModel.GetDeclaredSymbol(context.Node) is not INamedTypeSymbol typeSymbol)
+            return;
+
+        if (typeSymbol.IsAbstract)
+            return;
+
+        foreach (var @interface in typeSymbol.AllInterfaces)
+        {
+            var interfaceName = @interface.OriginalDefinition.ToDisplayString();
+
+            switch (interfaceName)
+            {
+                case "Handlr.Abstractions.Commands.ICommand" when @interface.TypeArguments.Length == 0:
+                    Commands.Add(typeSymbol);
+                    break;
+
+                case "Handlr.Abstractions.Commands.ICommand<TResult>" when @interface.TypeArguments.Length == 1:
+                    CommandsWithResults.Add(typeSymbol);
+                    break;
+
+                case "Handlr.Abstractions.Queries.IQuery<TResult>" when @interface.TypeArguments.Length == 1:
+                    Queries.Add(typeSymbol);
+                    break;
+
+                case "Handlr.Abstractions.Commands.ICommandHandler<TCommand>" when @interface.TypeArguments.Length == 1:
+                    CommandHandlers.Add(typeSymbol);
+                    break;
+
+                case "Handlr.Abstractions.Commands.ICommandHandler<TCommand, TResult>" when @interface.TypeArguments.Length == 2:
+                    CommandWithResultHandlers.Add(typeSymbol);
+                    break;
+
+                case "Handlr.Abstractions.Queries.IQueryHandler<TQuery, TResult>" when @interface.TypeArguments.Length == 2:
+                    QueryHandlers.Add(typeSymbol);
+                    break;
+
+                case "FluentValidation.IValidator<T>" when @interface.TypeArguments.Length == 1:
+                    Validators.Add(typeSymbol);
+                    break;
+            }
+        }
     }
 }

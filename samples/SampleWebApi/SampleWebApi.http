@@ -1,6 +1,164 @@
 @SampleWebApi_HostAddress = http://localhost:5244
 
-GET {{SampleWebApi_HostAddress}}/weatherforecast/
+### Health Check - Test if the API is running
+GET {{SampleWebApi_HostAddress}}/api/health
 Accept: application/json
+
+###
+
+### Create User - Test command with validation and pipeline behaviors
+POST {{SampleWebApi_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "age": 30
+}
+
+###
+
+### Create Another User - Test with different data
+POST {{SampleWebApi_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "age": 25
+}
+
+###
+
+### Get User by ID - Test query with pipeline behaviors
+GET {{SampleWebApi_HostAddress}}/api/users/1234
+Accept: application/json
+
+###
+
+### Get Users with Filtering - Test query with parameters
+GET {{SampleWebApi_HostAddress}}/api/users?nameFilter=User&minAge=20&page=1&pageSize=5
+Accept: application/json
+
+###
+
+### Get Users with Pagination Only - Test without filters
+GET {{SampleWebApi_HostAddress}}/api/users?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### Update User Status - Test command without return value
+PUT {{SampleWebApi_HostAddress}}/api/users/1234/status
+Content-Type: application/json
+
+{
+  "status": "Inactive"
+}
+
+###
+
+### Generate Summary Report - Test command with complex validation
+POST {{SampleWebApi_HostAddress}}/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "reportType": "summary"
+}
+
+###
+
+### Generate Detailed Report - Test with different report type
+POST {{SampleWebApi_HostAddress}}/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-06-01",
+  "endDate": "2024-06-30",
+  "reportType": "detailed"
+}
+
+###
+
+### Test Validation Error - Missing name (should trigger validation pipeline)
+POST {{SampleWebApi_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "age": 25
+}
+
+###
+
+### Test Validation Error - Invalid age (should trigger validation pipeline)
+POST {{SampleWebApi_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "age": -5
+}
+
+###
+
+### Test Validation Error - Invalid email format
+POST {{SampleWebApi_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "invalid-email",
+  "age": 25
+}
+
+###
+
+### Test Report Validation Error - Invalid date range
+POST {{SampleWebApi_HostAddress}}/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-12-31",
+  "endDate": "2024-01-01",
+  "reportType": "summary"
+}
+
+###
+
+### Test Report Validation Error - Missing report type
+POST {{SampleWebApi_HostAddress}}/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "reportType": ""
+}
+
+###
+
+### Test Edge Cases - Get user with invalid ID
+GET {{SampleWebApi_HostAddress}}/api/users/0
+Accept: application/json
+
+###
+
+### Test Edge Cases - Invalid pagination parameters
+GET {{SampleWebApi_HostAddress}}/api/users?page=0&pageSize=150
+Accept: application/json
+
+###
+
+### Test Edge Cases - Update status for non-existent user
+PUT {{SampleWebApi_HostAddress}}/api/users/99999/status
+Content-Type: application/json
+
+{
+  "status": "Active"
+}
 
 ###

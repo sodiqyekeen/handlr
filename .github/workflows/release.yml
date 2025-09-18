@@ -188,6 +188,8 @@ jobs:
       run: |
         dotnet pack src/Handlr.Abstractions --configuration Release --no-build --output ./packages
         dotnet pack src/Handlr.SourceGenerator --configuration Release --no-build --output ./packages
+        dotnet pack src/Handlr.Extensions.FluentValidation --configuration Release --no-build --output ./packages
+        dotnet pack src/Handlr.Extensions.DataAnnotations --configuration Release --no-build --output ./packages
 
     - name: Upload packages
       uses: actions/upload-artifact@v4
@@ -398,6 +400,8 @@ jobs:
         echo "|---------|---------|-----------|-------------|" >> release-notes.md
         echo "| [Handlr.Abstractions](https://www.nuget.org/packages/Handlr.Abstractions/) | \`$VERSION\` | [![NuGet](https://img.shields.io/nuget/dt/Handlr.Abstractions.svg)](https://www.nuget.org/packages/Handlr.Abstractions/) | Core abstractions and interfaces for CQRS |" >> release-notes.md
         echo "| [Handlr.SourceGenerator](https://www.nuget.org/packages/Handlr.SourceGenerator/) | \`$VERSION\` | [![NuGet](https://img.shields.io/nuget/dt/Handlr.SourceGenerator.svg)](https://www.nuget.org/packages/Handlr.SourceGenerator/) | Source generator for automatic handler generation |" >> release-notes.md
+        echo "| [Handlr.Extensions.FluentValidation](https://www.nuget.org/packages/Handlr.Extensions.FluentValidation/) | \`$VERSION\` | [![NuGet](https://img.shields.io/nuget/dt/Handlr.Extensions.FluentValidation.svg)](https://www.nuget.org/packages/Handlr.Extensions.FluentValidation/) | FluentValidation support for automatic validation |" >> release-notes.md
+        echo "| [Handlr.Extensions.DataAnnotations](https://www.nuget.org/packages/Handlr.Extensions.DataAnnotations/) | \`$VERSION\` | [![NuGet](https://img.shields.io/nuget/dt/Handlr.Extensions.DataAnnotations.svg)](https://www.nuget.org/packages/Handlr.Extensions.DataAnnotations/) | Data Annotations validation support |" >> release-notes.md
         echo "" >> release-notes.md
         
         # Installation instructions
@@ -407,12 +411,18 @@ jobs:
         echo "\`\`\`powershell" >> release-notes.md
         echo "Install-Package Handlr.Abstractions -Version $VERSION" >> release-notes.md
         echo "Install-Package Handlr.SourceGenerator -Version $VERSION" >> release-notes.md
+        echo "# Optional validation extensions" >> release-notes.md
+        echo "Install-Package Handlr.Extensions.FluentValidation -Version $VERSION" >> release-notes.md
+        echo "Install-Package Handlr.Extensions.DataAnnotations -Version $VERSION" >> release-notes.md
         echo "\`\`\`" >> release-notes.md
         echo "" >> release-notes.md
         echo "### .NET CLI" >> release-notes.md
         echo "\`\`\`bash" >> release-notes.md
         echo "dotnet add package Handlr.Abstractions --version $VERSION" >> release-notes.md
         echo "dotnet add package Handlr.SourceGenerator --version $VERSION" >> release-notes.md
+        echo "# Optional validation extensions" >> release-notes.md
+        echo "dotnet add package Handlr.Extensions.FluentValidation --version $VERSION" >> release-notes.md
+        echo "dotnet add package Handlr.Extensions.DataAnnotations --version $VERSION" >> release-notes.md
         echo "\`\`\`" >> release-notes.md
         echo "" >> release-notes.md
         echo "### PackageReference (csproj)" >> release-notes.md
@@ -422,6 +432,9 @@ jobs:
         echo "  <OutputItemType>Analyzer</OutputItemType>" >> release-notes.md
         echo "  <ReferenceOutputAssembly>false</ReferenceOutputAssembly>" >> release-notes.md
         echo "</PackageReference>" >> release-notes.md
+        echo "<!-- Optional validation extensions -->" >> release-notes.md
+        echo "<PackageReference Include=\"Handlr.Extensions.FluentValidation\" Version=\"$VERSION\" />" >> release-notes.md
+        echo "<PackageReference Include=\"Handlr.Extensions.DataAnnotations\" Version=\"$VERSION\" />" >> release-notes.md
         echo "\`\`\`" >> release-notes.md
         echo "" >> release-notes.md
         

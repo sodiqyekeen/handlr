@@ -1,0 +1,91 @@
+### Test FluentValidation Pipeline Behavior
+
+# Test 1: Valid CreateUser request (should succeed)
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "age": 30
+}
+
+###
+
+# Test 2: Invalid CreateUser request - missing name (should fail with validation error)
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "john.doe@example.com",
+  "age": 30
+}
+
+###
+
+# Test 3: Invalid CreateUser request - invalid email (should fail with validation error)
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "invalid-email",
+  "age": 30
+}
+
+###
+
+# Test 4: Invalid CreateUser request - invalid age (should fail with validation error)
+POST http://localhost:5244/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "age": 200
+}
+
+###
+
+# Test 5: Invalid UpdateUserStatus - invalid user ID (should fail with validation error)
+PUT http://localhost:5244/api/users/0/status
+Content-Type: application/json
+
+{
+  "status": "Active"
+}
+
+###
+
+# Test 6: Invalid UpdateUserStatus - invalid status (should fail with validation error)
+PUT http://localhost:5244/api/users/1234/status
+Content-Type: application/json
+
+{
+  "status": "InvalidStatus"
+}
+
+###
+
+# Test 7: Invalid GenerateReport - invalid date range (should fail with validation error)
+POST http://localhost:5244/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-12-31",
+  "endDate": "2024-01-01",
+  "reportType": "summary"
+}
+
+###
+
+# Test 8: Invalid GenerateReport - invalid report type (should fail with validation error)
+POST http://localhost:5244/api/reports
+Content-Type: application/json
+
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "reportType": "invalid"
+}

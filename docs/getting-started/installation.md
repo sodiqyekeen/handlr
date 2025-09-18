@@ -29,8 +29,8 @@ dotnet add package Handlr.SourceGenerator
 Add these to your `.csproj` file:
 
 ```xml
-<PackageReference Include="Handlr.Abstractions" Version="1.0.0" />
-<PackageReference Include="Handlr.SourceGenerator" Version="1.0.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+<PackageReference Include="Handlr.Abstractions" Version="1.0.4" />
+<PackageReference Include="Handlr.SourceGenerator" Version="1.0.4" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 ```
 
 > **Note**: The enhanced source generator now produces high-performance switch expression-based dispatchers with compile-time type safety.

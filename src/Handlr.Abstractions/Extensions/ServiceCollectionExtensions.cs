@@ -11,8 +11,9 @@ namespace Handlr.Abstractions.Extensions;
 public static class HandlrServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds basic Handlr services to the service collection.
-    /// If the source generator is installed, this will also automatically register discovered handlers.
+    /// Adds Handlr services and automatically registers all discovered handlers.
+    /// When the source generator is present, it will automatically register optimized handlers.
+    /// Without the source generator, only core services are registered and handlers must be added manually.
     /// </summary>
     /// <param name="services">The service collection</param>
     /// <param name="configureOptions">Optional configuration action</param>
@@ -28,44 +29,43 @@ public static class HandlrServiceCollectionExtensions
         // Register core services
         services.AddScoped<IHandlrDispatcher, HandlrDispatcher>();
 
-        // Try to register discovered handlers if source generator is available
-        TryRegisterDiscoveredHandlers(services);
+        // Try to find and call the generated registration method
+        TryCallGeneratedRegistration(services);
 
         return services;
     }
 
-    /// <summary>
-    /// Attempts to register handlers discovered by the source generator.
-    /// This is called automatically by AddHandlr() if the source generator is present.
-    /// </summary>
-    /// <param name="services">The service collection</param>
-    private static void TryRegisterDiscoveredHandlers(IServiceCollection services)
+    private static void TryCallGeneratedRegistration(IServiceCollection services)
     {
         try
         {
-            // Look for the generated extension method in any loaded assembly
+            // Look for the generated extension method
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
             foreach (var assembly in assemblies)
             {
-                var generatedExtensionsType = assembly.GetType("Handlr.Abstractions.Extensions.GeneratedHandlrServiceCollectionExtensions");
-                if (generatedExtensionsType != null)
+                // Look for generated extension class
+                var generatedType = assembly.GetType("Handlr.Generated.Extensions.GeneratedHandlrServiceCollectionExtensions");
+                if (generatedType != null)
                 {
-                    var method = generatedExtensionsType.GetMethod("AddDiscoveredHandlrHandlers",
+                    Console.WriteLine("� Found generated extensions class!");
+
+                    // Find the TryAddGeneratedHandlers method
+                    var method = generatedType.GetMethod("TryAddGeneratedHandlers",
                         BindingFlags.Public | BindingFlags.Static);
 
                     if (method != null)
                     {
                         method.Invoke(null, new object[] { services });
-                        break;
+                        return;
                     }
                 }
             }
+
+            Console.WriteLine("⚠️ Generated handlers not found - using basic dispatcher");
         }
-        catch
+        catch (Exception ex)
         {
-            // If source generator isn't available or discovery fails, continue without error
-            // Users can manually register handlers if needed
+            Console.WriteLine($"⚠️ Error calling generated registration: {ex.Message}");
         }
     }
 

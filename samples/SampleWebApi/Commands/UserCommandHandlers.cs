@@ -17,18 +17,11 @@ public class CreateUserCommandHandler : ICommandHandler<CreateUserCommand, Resul
     /// </summary>
     public async Task<Result<int>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
+        // NOTE: Validation is now handled by ValidationBehavior in the pipeline
+        // This handler focuses only on business logic
+
         // Simulate creating a user
         await Task.Delay(100, cancellationToken);
-
-        // Validate the command
-        if (string.IsNullOrWhiteSpace(command.Name))
-            return Result<int>.Failure("Name is required");
-
-        if (string.IsNullOrWhiteSpace(command.Email))
-            return Result<int>.Failure("Email is required");
-
-        if (command.Age < 0 || command.Age > 150)
-            return Result<int>.Failure("Age must be between 0 and 150");
 
         // Simulate user creation and return the new user ID
         var newUserId = Random.Shared.Next(1000, 9999);
@@ -47,15 +40,11 @@ public class UpdateUserStatusCommandHandler : ICommandHandler<UpdateUserStatusCo
     /// </summary>
     public async Task<Result> Handle(UpdateUserStatusCommand command, CancellationToken cancellationToken)
     {
+        // NOTE: Validation is now handled by ValidationBehavior in the pipeline
+        // This handler focuses only on business logic
+
         // Simulate updating user status
         await Task.Delay(50, cancellationToken);
-
-        // Validate the command
-        if (command.UserId <= 0)
-            return Result.Failure("Invalid user ID");
-
-        if (string.IsNullOrWhiteSpace(command.Status))
-            return Result.Failure("Status is required");
 
         // Simulate status update
         return Result.Success();
@@ -72,15 +61,11 @@ public class GenerateReportCommandHandler : ICommandHandler<GenerateReportComman
     /// </summary>
     public async Task<Result<string>> Handle(GenerateReportCommand command, CancellationToken cancellationToken)
     {
+        // NOTE: Validation is now handled by ValidationBehavior in the pipeline
+        // This handler focuses only on business logic
+
         // Simulate report generation
         await Task.Delay(200, cancellationToken);
-
-        // Validate the command
-        if (command.EndDate < command.StartDate)
-            return Result<string>.Failure("End date must be after start date");
-
-        if (string.IsNullOrWhiteSpace(command.ReportType))
-            return Result<string>.Failure("Report type is required");
 
         // Simulate report generation
         var userCount = Random.Shared.Next(50, 500);
@@ -89,6 +74,7 @@ public class GenerateReportCommandHandler : ICommandHandler<GenerateReportComman
         {
             "summary" => $"Summary Report: {userCount} total users between {command.StartDate:yyyy-MM-dd} and {command.EndDate:yyyy-MM-dd}",
             "detailed" => $"Detailed Report: Found {userCount} users. Average age: {Random.Shared.Next(25, 45):F1} years",
+            "analytics" => $"Analytics Report: {userCount} users analyzed with {Random.Shared.Next(5, 15)} key insights generated",
             _ => $"Standard Report: {userCount} users found"
         };
 

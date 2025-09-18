@@ -6,6 +6,8 @@
 
 [![NuGet - Handlr.Abstractions](https://img.shields.io/nuget/v/Handlr.Abstractions.svg?label=Handlr.Abstractions)](https://www.nuget.org/packages/Handlr.Abstractions/)
 [![NuGet - Handlr.SourceGenerator](https://img.shields.io/nuget/v/Handlr.SourceGenerator.svg?label=Handlr.SourceGenerator)](https://www.nuget.org/packages/Handlr.SourceGenerator/)
+[![NuGet - FluentValidation Extension](https://img.shields.io/nuget/v/Handlr.Extensions.FluentValidation.svg?label=FluentValidation)](https://www.nuget.org/packages/Handlr.Extensions.FluentValidation/)
+[![NuGet - DataAnnotations Extension](https://img.shields.io/nuget/v/Handlr.Extensions.DataAnnotations.svg?label=DataAnnotations)](https://www.nuget.org/packages/Handlr.Extensions.DataAnnotations/)
 [![Continuous Integration](https://github.com/sodiqyekeen/handlr/workflows/Continuous%20Integration/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/ci.yml)
 [![Release](https://github.com/sodiqyekeen/handlr/workflows/Release/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/release.yml)
 [![Security Scan](https://github.com/sodiqyekeen/handlr/workflows/Security%20Scan/badge.svg)](https://github.com/sodiqyekeen/handlr/actions/workflows/security.yml)
@@ -26,6 +28,11 @@ A high-performance CQRS (Command Query Responsibility Segregation) framework for
 - 🤖 **Automatic Registration**: Discovers and registers all handlers
 - 🔧 **Zero Boilerplate**: No partial classes, just implement interfaces
 - ⚡ **Compile-time Safety**: Type-safe handler discovery with IntelliSense
+
+### Extension Packages
+- 🛡️ **FluentValidation Extension** (`Handlr.Extensions.FluentValidation`): Automatic FluentValidation integration with validator discovery
+- 📋 **DataAnnotations Extension** (`Handlr.Extensions.DataAnnotations`): Built-in Data Annotations validation support with recursive validation
+- 🔌 **Modular Architecture**: Choose only the validation frameworks you need
 
 ### Samples & Examples
 - 📚 **Implementation Patterns**: Real-world examples of pipeline behaviors
@@ -49,6 +56,10 @@ A high-performance CQRS (Command Query Responsibility Segregation) framework for
 ```xml
 <PackageReference Include="Handlr.Abstractions" />
 <PackageReference Include="Handlr.SourceGenerator" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+
+<!-- Optional validation extensions -->
+<PackageReference Include="Handlr.Extensions.FluentValidation" />
+<PackageReference Include="Handlr.Extensions.DataAnnotations" />
 ```
 
 ### 2. Define Commands and Queries
@@ -156,7 +167,166 @@ public record CreateOrderCommand : BaseCommand<Result<Order>>, IValidatable, IRe
 }
 ```
 
-## 🔧 Pipeline Behavior Registration
+## �️ Validation Support
+
+Handlr provides modular validation support through dedicated extension packages, following the proven MediatR extension pattern. Choose the validation framework that best fits your needs:
+
+### FluentValidation Extension
+
+The **Handlr.Extensions.FluentValidation** package provides seamless integration with FluentValidation:
+
+#### Installation
+```bash
+dotnet add package Handlr.Extensions.FluentValidation
+```
+
+#### Quick Setup
+```csharp
+// 1. Install the FluentValidation extension
+// 2. Register services
+services.AddHandlr();
+services.AddHandlrFluentValidation(); // Adds FluentValidation pipeline behavior
+
+// 3. Create your validator
+public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+{
+    public CreateUserCommandValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .Length(2, 50);
+        
+        RuleFor(x => x.Email)
+            .NotEmpty()
+            .EmailAddress();
+    }
+}
+
+// 4. Your command (no changes needed!)
+public record CreateUserCommand : ICommand<Result<User>>
+{
+    public string Name { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+}
+```
+
+**Features:**
+- ✅ **Automatic Discovery**: Validators are automatically registered and executed
+- ✅ **Pipeline Integration**: Validation happens before your handler runs
+- ✅ **Detailed Errors**: Get comprehensive validation error information
+- ✅ **Zero Configuration**: Works out of the box with standard FluentValidation patterns
+
+### DataAnnotations Extension
+
+The **Handlr.Extensions.DataAnnotations** package provides built-in .NET validation support:
+
+#### Installation
+```bash
+dotnet add package Handlr.Extensions.DataAnnotations
+```
+
+#### Quick Setup
+```csharp
+// 1. Install the DataAnnotations extension  
+// 2. Register services
+services.AddHandlr();
+services.AddHandlrDataAnnotations(); // Adds DataAnnotations pipeline behavior
+
+// 3. Annotate your commands/queries
+public record CreateUserCommand : ICommand<Result<User>>
+{
+    [Required]
+    [StringLength(50, MinimumLength = 2)]
+    public string Name { get; init; } = string.Empty;
+    
+    [Required]
+    [EmailAddress]
+    public string Email { get; init; } = string.Empty;
+}
+```
+
+**Features:**
+- ✅ **Built-in Attributes**: Use standard .NET validation attributes
+- ✅ **No Dependencies**: Uses only System.ComponentModel.DataAnnotations
+- ✅ **Lightweight**: Minimal overhead for simple validation scenarios
+- ✅ **Familiar**: Standard .NET validation patterns
+
+### Mixed Validation (Advanced)
+
+You can use both validation frameworks together for maximum flexibility:
+
+```csharp
+services.AddHandlr();
+
+// Enable both validation frameworks
+services.AddHandlrFluentValidation();    // For complex business rules
+services.AddHandlrDataAnnotations();     // For simple attribute validation
+
+// Commands can use either or both approaches
+public record CreateUserCommand : ICommand<Result<User>>
+{
+    [Required] // DataAnnotations validation
+    public string Name { get; init; } = string.Empty;
+    
+    [EmailAddress] // DataAnnotations validation  
+    public string Email { get; init; } = string.Empty;
+    
+    public int Age { get; init; }
+}
+
+// FluentValidation for complex business rules
+public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
+{
+    public CreateUserCommandValidator()
+    {
+        RuleFor(x => x.Age)
+            .GreaterThanOrEqualTo(18)
+            .WithMessage("User must be at least 18 years old");
+    }
+}
+```
+
+### Validation Error Handling
+
+Both extensions throw `ValidationException` with detailed error information:
+
+```csharp
+try
+{
+    var result = await dispatcher.SendAsync(command);
+}
+catch (ValidationException ex)
+{
+    // Handle validation errors
+    foreach (var error in ex.Errors)
+    {
+        Console.WriteLine($"{error.PropertyName}: {error.ErrorMessage}");
+    }
+}
+```
+
+### Selective Validation
+
+You can choose validation frameworks per project or command type:
+
+```csharp
+// Project A: Only FluentValidation
+services.AddHandlr();
+services.AddHandlrFluentValidation();
+
+// Project B: Only DataAnnotations  
+services.AddHandlr();
+services.AddHandlrDataAnnotations();
+
+// Project C: Both frameworks
+services.AddHandlr();
+services.AddHandlrFluentValidation();
+services.AddHandlrDataAnnotations();
+```
+
+> **💡 Pro Tip**: Use DataAnnotations for simple field validation and FluentValidation for complex business rules and cross-field validation.
+
+## �🔧 Pipeline Behavior Registration
 
 Handlr provides flexible pipeline behavior registration using standard .NET DI patterns. You can choose between **global** and **selective** registration approaches:
 
@@ -244,11 +414,12 @@ services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehaviorExample<,
 
 ```
 ├── src/
-│   ├── Handlr.Abstractions/          # Core interfaces and abstractions
-│   ├── Handlr.SourceGenerator/        # Source generator implementation
-│   └── Handlr.Extensions/             # Additional extensions
+│   ├── Handlr.Abstractions/                    # Core interfaces and abstractions
+│   ├── Handlr.SourceGenerator/                 # Source generator implementation
+│   ├── Handlr.Extensions.FluentValidation/     # FluentValidation integration
+│   └── Handlr.Extensions.DataAnnotations/      # DataAnnotations validation support
 ├── samples/
-│   ├── SampleConsoleApp/              # Console app with behavior examples
+│   ├── SampleConsoleApp/                       # Console app with behavior examples
 │   │   └── Examples/                  # Comprehensive behavior examples
 │   └── SampleWebApi/                  # Web API example
 └── tests/                             # Unit and integration tests

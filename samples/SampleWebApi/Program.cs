@@ -1,13 +1,34 @@
+using FluentValidation;
 using Handlr.Abstractions.Common;
 using Handlr.Abstractions.Extensions;
 using Handlr.Abstractions.Pipelines;
 using Handlr.Abstractions.Results;
+using Handlr.Extensions.DataAnnotations;
+using Handlr.Extensions.FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using SampleWebApi.Behaviors;
 using SampleWebApi.Commands;
 using SampleWebApi.Queries;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container
+builder.Services.AddEndpointsApiExplorer();
+
+// 🚀 Add Handlr CQRS Framework (core, lightweight package)
+builder.Services.AddHandlr();
+
+// 🔧 Add Validation Extensions (modular - pick what you need)
+builder.Services.AddHandlrFluentValidation();      // Auto-discovers FluentValidation validators
+builder.Services.AddHandlrDataAnnotations();       // Enables Data Annotations validation
+
+// 🎯 Add Custom Pipeline Behaviors (optional)
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehavior<,>));
+
+// 📊 Add additional services
+builder.Services.AddMemoryCache();
+builder.Services.AddLogging();
 
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
@@ -20,7 +41,7 @@ builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(MetricsBehavior<,>));
 
-// 📊 Add additional services
+//  Add additional services
 builder.Services.AddMemoryCache();
 builder.Services.AddLogging();
 
@@ -39,18 +60,26 @@ app.UseHttpsRedirection();
 // POST /api/users - Create a new user
 app.MapPost("/api/users", async ([FromServices] IHandlrDispatcher handlr, [FromBody] CreateUserRequest request) =>
 {
-    var command = new CreateUserCommand
+    try
     {
-        Name = request.Name,
-        Email = request.Email,
-        Age = request.Age
-    };
+        var command = new CreateUserCommand
+        {
+            Name = request.Name,
+            Email = request.Email,
+            Age = request.Age
+        };
 
-    var result = await handlr.SendAsync<Result<int>>(command);
+        var result = await handlr.SendAsync<Result<int>>(command);
 
-    return result.IsSuccess
-        ? Results.Created($"/api/users/{result.Value}", new { Id = result.Value, Message = "User created successfully" })
-        : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+        return result.IsSuccess
+            ? Results.Created($"/api/users/{result.Value}", new { Id = result.Value, Message = "User created successfully" })
+            : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
+        return Results.BadRequest(new { Error = "Validation failed", Details = errors });
+    }
 })
 .WithName("CreateUser")
 .WithSummary("Create a new user")
@@ -59,17 +88,25 @@ app.MapPost("/api/users", async ([FromServices] IHandlrDispatcher handlr, [FromB
 // PUT /api/users/{id}/status - Update user status
 app.MapPut("/api/users/{id}/status", async ([FromServices] IHandlrDispatcher handlr, int id, [FromBody] UpdateStatusRequest request) =>
 {
-    var command = new UpdateUserStatusCommand
+    try
     {
-        UserId = id,
-        Status = request.Status
-    };
+        var command = new UpdateUserStatusCommand
+        {
+            UserId = id,
+            Status = request.Status
+        };
 
-    var result = await handlr.SendAsync<Result>(command);
+        var result = await handlr.SendAsync<Result>(command);
 
-    return result.IsSuccess
-        ? Results.Ok(new { Message = "Status updated successfully" })
-        : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+        return result.IsSuccess
+            ? Results.Ok(new { Message = "Status updated successfully" })
+            : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
+        return Results.BadRequest(new { Error = "Validation failed", Details = errors });
+    }
 })
 .WithName("UpdateUserStatus")
 .WithSummary("Update user status")
@@ -78,24 +115,97 @@ app.MapPut("/api/users/{id}/status", async ([FromServices] IHandlrDispatcher han
 // POST /api/reports - Generate a report
 app.MapPost("/api/reports", async ([FromServices] IHandlrDispatcher handlr, [FromBody] GenerateReportRequest request) =>
 {
-    var command = new GenerateReportCommand
+    try
     {
-        StartDate = request.StartDate,
-        EndDate = request.EndDate,
-        ReportType = request.ReportType
-    };
+        var command = new GenerateReportCommand
+        {
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            ReportType = request.ReportType
+        };
 
-    var result = await handlr.SendAsync<Result<string>>(command);
+        var result = await handlr.SendAsync<Result<string>>(command);
 
-    return result.IsSuccess
-        ? Results.Ok(new { ReportData = result.Value, Message = "Report generated successfully" })
-        : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+        return result.IsSuccess
+            ? Results.Ok(new { ReportData = result.Value, Message = "Report generated successfully" })
+            : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
+        return Results.BadRequest(new { Error = "Validation failed", Details = errors });
+    }
 })
 .WithName("GenerateReport")
 .WithSummary("Generate a report")
 .WithDescription("Generates a report based on the specified criteria");
 
+// POST /api/users/mixed-validation - Create user with mixed validation (Data Annotations + FluentValidation)
+app.MapPost("/api/users/mixed-validation", async ([FromServices] IHandlrDispatcher handlr, [FromBody] CreateUserMixedRequest request) =>
+{
+    try
+    {
+        var command = new CreateUserWithMixedValidationCommand
+        {
+            Name = request.Name,
+            Email = request.Email,
+            Age = request.Age
+        };
+
+        var result = await handlr.SendAsync<Result<int>>(command);
+
+        return result.IsSuccess
+            ? Results.Created($"/api/users/{result.Value}", new { Id = result.Value, Message = "User created successfully with mixed validation" })
+            : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
+        return Results.BadRequest(new { Error = "Validation failed", Details = errors });
+    }
+})
+.WithName("CreateUserMixedValidation")
+.WithSummary("Create user with mixed validation")
+.WithDescription("Demonstrates both Data Annotations and FluentValidation working together");
+
 // 🔍 QUERY ENDPOINTS (Read operations)
+
+// GET /api/users/search - Search users with Data Annotations validation
+app.MapGet("/api/users/search", async ([FromServices] IHandlrDispatcher handlr,
+    [FromQuery] string searchTerm = "",
+    [FromQuery] int pageSize = 10,
+    [FromQuery] int pageNumber = 1) =>
+{
+    try
+    {
+        var query = new SearchUsersQuery
+        {
+            SearchTerm = searchTerm,
+            PageSize = pageSize,
+            PageNumber = pageNumber
+        };
+
+        var result = await handlr.SendAsync(query);
+
+        return result.IsSuccess
+            ? Results.Ok(new
+            {
+                Users = result.Value,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                SearchTerm = searchTerm
+            })
+            : Results.BadRequest(new { Error = result.FirstError?.Message ?? "Bad request" });
+    }
+    catch (FluentValidation.ValidationException ex)
+    {
+        var errors = ex.Errors.Select(e => new { Field = e.PropertyName, Message = e.ErrorMessage }).ToList();
+        return Results.BadRequest(new { Error = "Validation failed", Details = errors });
+    }
+})
+.WithName("SearchUsers")
+.WithSummary("Search users with Data Annotations validation")
+.WithDescription("Demonstrates validation on queries using Data Annotations");
 
 // GET /api/users/{id} - Get user by ID
 app.MapGet("/api/users/{id}", async ([FromServices] IHandlrDispatcher handlr, int id) =>
@@ -164,3 +274,4 @@ app.Run();
 record CreateUserRequest(string Name, string Email, int Age);
 record UpdateStatusRequest(string Status);
 record GenerateReportRequest(DateTime StartDate, DateTime EndDate, string ReportType);
+record CreateUserMixedRequest(string Name, string Email, int Age);

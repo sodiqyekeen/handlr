@@ -8,6 +8,8 @@
     <IsTestProject>true</IsTestProject>
     <RootNamespace>Handlr.Tests</RootNamespace>
     <AssemblyName>Handlr.Tests</AssemblyName>
+    <!-- Disable XML documentation for test projects -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,11 +19,18 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Handlr.Abstractions/Handlr.Abstractions.csproj" />
     <ProjectReference Include="../../src/Handlr.SourceGenerator/Handlr.SourceGenerator.csproj" />
+    <ProjectReference
+      Include="../../src/Handlr.Extensions.FluentValidation/Handlr.Extensions.FluentValidation.csproj" />
+    <ProjectReference
+      Include="../../src/Handlr.Extensions.DataAnnotations/Handlr.Extensions.DataAnnotations.csproj" />
   </ItemGroup>
 
   <ItemGroup>

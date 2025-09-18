@@ -4,17 +4,21 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Enable source generator file output for debugging -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Handlr.Abstractions/Handlr.Abstractions.csproj" />
-    <ProjectReference Include="../../src/Handlr.SourceGenerator/Handlr.SourceGenerator.csproj"
-      OutputItemType="Analyzer"
-      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../src/Handlr.SourceGenerator/Handlr.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../../src/Handlr.Extensions.FluentValidation/Handlr.Extensions.FluentValidation.csproj" />
+    <ProjectReference Include="../../src/Handlr.Extensions.DataAnnotations/Handlr.Extensions.DataAnnotations.csproj" />
   </ItemGroup>
 
 </Project>
