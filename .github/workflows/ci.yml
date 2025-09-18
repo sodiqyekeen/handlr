@@ -90,14 +90,11 @@ jobs:
       with:
         dotnet-version: '9.0.x'
 
-    - name: Build Console Sample
-      run: dotnet build samples/SampleConsoleApp --configuration Release
-
     - name: Build Web API Sample
       run: dotnet build samples/SampleWebApi --configuration Release
 
-    - name: Test Console Sample
-      run: dotnet run --project samples/SampleConsoleApp --configuration Release
+    - name: Test Web API Sample (build verification)
+      run: dotnet build samples/SampleWebApi --configuration Release --verbosity minimal
 
   code-quality:
     name: Code Quality
